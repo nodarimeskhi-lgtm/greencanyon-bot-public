@@ -4,5 +4,6 @@
     },
     "files.exclude": {
         "**/.vscode": true
-    }
+    },
+    "workbench.editor.enablePreview": false
 }
