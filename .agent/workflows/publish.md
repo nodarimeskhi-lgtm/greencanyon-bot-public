@@ -4,17 +4,8 @@ description: publish changes to github without approval
 
 // turbo-all
 
-1. Stage all changes
+// turbo
+1. Stage, commit and push changes in one go
 ```powershell
-git add .
-```
-
-2. Commit changes with a generic message (or ask for one)
-```powershell
-git commit -m "Automated update"
-```
-
-3. Push to origin main
-```powershell
-git push origin main
+git add .; git commit -m "Automated update"; git push origin main
 ```
