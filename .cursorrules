@@ -20,3 +20,9 @@
 
 ## How to Read Context
 - Before answering queries about "current policies", look for `_AI_CONTEXT.md` in the folder.
+
+## Language Protocol
+
+**CRITICAL RULE**: Always respond and generate content (including Implementation Plans, Task descriptions, and file content) in the **same language** used by the user in their request, unless explicitly asked otherwise.
+- Если запрос на русском (RU), план реализации, описание задач и ответы ДОЛЖНЫ быть на русском языке.
+- This ensures clarity and consistency with the user's workflow.
