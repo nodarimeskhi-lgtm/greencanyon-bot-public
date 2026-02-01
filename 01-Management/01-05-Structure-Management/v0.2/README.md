@@ -1,17 +1,24 @@
 ---
+# 1. Идентификация (Обязательно)
 id: structure-management-v02-readme
 type: instruction
 status: approved
+
+# 2. Управление доступом (Обязательно для ИИ)
 ai_access: true
 owner: Management
+author: @ainabige
 classification: internal
+
+# 3. Контекст для ИИ (Рекомендуется)
 summary: "Главный README файл раздела управления структурой v0.2, содержащий ссылки на все инструкции."
 topics: [structure, management, documentation]
+language: ru
 ---
 
 # Structure Management v0.2
 
-Добро пожаловать в драфт версии 0.2 системы управления структурой компании Galt.
+Добро пожаловать в версию 0.2 системы управления структурой компании Galt.
 
 Эта версия разбивает монолитную документацию v0.1 на специализированные инструкции для удобства использования людьми и настройки ИИ-агентов.
 
@@ -34,4 +41,4 @@ topics: [structure, management, documentation]
     *   *О чем*: Философия системы, простые привычки для эффективной работы.
 
 ---
-*Статус: Draft v0.2 (Created 2026-02-01)*
+*Статус: Approved v0.2 (2026-02-01)*

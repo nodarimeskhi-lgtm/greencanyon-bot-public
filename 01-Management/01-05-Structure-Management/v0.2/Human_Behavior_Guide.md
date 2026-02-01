@@ -1,12 +1,19 @@
 ---
+# 1. Идентификация (Обязательно)
 id: human-behavior-guide-v02
 type: instruction
 status: approved
+
+# 2. Управление доступом (Обязательно для ИИ)
 ai_access: true
 owner: Management
+author: @ainabige
 classification: internal
+
+# 3. Контекст для ИИ (Рекомендуется)
 summary: "Философия и три золотых правила работы человека с системой документации и ИИ-агентами."
 topics: [human, behavior, guide, philosophy]
+language: ru
 ---
 
 # Общая инструкция поведения для человека (v0.2)

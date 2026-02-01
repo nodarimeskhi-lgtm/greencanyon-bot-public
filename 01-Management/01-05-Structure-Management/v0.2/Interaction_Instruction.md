@@ -1,12 +1,19 @@
 ---
+# 1. Идентификация (Обязательно)
 id: interaction-instruction-v02
 type: instruction
 status: approved
+
+# 2. Управление доступом (Обязательно для ИИ)
 ai_access: true
 owner: Management
+author: @ainabige
 classification: internal
+
+# 3. Контекст для ИИ (Рекомендуется)
 summary: "Описывает протокол публикации документов и правила работы ИИ-агентов в структуре папок."
 topics: [interaction, ai-agent, publishing, workflow]
+language: ru
 ---
 
 # Инструкция по Взаимодействию (v0.2)

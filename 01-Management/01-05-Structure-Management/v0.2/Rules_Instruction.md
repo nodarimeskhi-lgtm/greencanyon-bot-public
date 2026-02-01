@@ -1,12 +1,19 @@
 ---
+# 1. Идентификация (Обязательно)
 id: rules-instruction-v02
 type: instruction
 status: approved
+
+# 2. Управление доступом (Обязательно для ИИ)
 ai_access: true
 owner: Management
+author: @ainabige
 classification: internal
+
+# 3. Контекст для ИИ (Рекомендуется)
 summary: "Определяет правила именования файлов, YAML метаданные и использование _AI_CONTEXT.md и _Drafts."
 topics: [rules, metadata, naming, ai-context]
+language: ru
 ---
 
 # Инструкция по Правилам Данных (v0.2)
@@ -47,25 +54,47 @@ topics: [rules, metadata, naming, ai-context]
 
 Все "официальные" (опубликованные) Markdown-файлы должны начинаться с блока метаданных YAML. Это позволяет ИИ точно понимать статус и содержание документа.
 
-**Обязательные поля:**
+### 3.1. Обязательные поля
+
 ```yaml
 ---
-id: unique-id-string        # Уникальный идентификатор (slug)
-type: document              # Тип: policy, instruction, report, contract, meeting-notes
-status: draft               # draft (черновик), review (на проверке), approved (утвержден), obsolete (устарел)
-ai_access: true             # Разрешен ли доступ ИИ к этому файлу (true/false)
-owner: Role Name            # Ответственная роль
-classification: internal    # public, internal, confidential, restricted
+# 1. Идентификация (Обязательно)
+id: unique-slug                 # Уникальный идентификатор (slug)
+type: policy | instruction | report | contract | meeting-notes
+status: draft | review | approved | obsolete
+
+# 2. Управление доступом (Обязательно для ИИ)
+ai_access: true                 # Если false или отсутствует - ИИ игнорирует файл
+owner: [Role]                   # Ответственная роль
+author: [GitUser]               # Автор документа
+classification: public | internal | confidential | secret
 ---
 ```
 
-**Опциональные (рекомендуемые) поля:**
+### 3.2. Рекомендуемые поля (Контекст для ИИ)
+
 ```yaml
-summary: "Краткое саммари содержания документа в 1-2 предложениях."
-topics: [topic1, topic2]    # Теги для поиска
-mentions: [@User]           # Упомянутые люди
+# 3. Контекст для ИИ (Рекомендуется)
+summary: "Краткое содержание (1-2 предложения) для экономии токенов при поиске"
+topics: [budget, 2024, construction, tsalka]
+language: ru | en | ka
+```
+
+### 3.3. Опциональные поля (Взаимосвязи и жизненный цикл)
+
+```yaml
+# 4. Взаимосвязи (Граф знаний)
+mentions: [@Levan, @CompanyX]   # Люди и организации
+related_files:
+  - path/to/strategy.md
+dependencies: 
+  - id: parent-policy-v1        # Этот документ зависит от другого
+
+# 5. Жизненный цикл
 validity:
-  end: 2026-12-31           # Срок действия документа
+  start: 2024-01-01
+  end: 2024-12-31
+next_review: 2024-06-01
 ```
 
 ## 4. Папки `_Drafts`
