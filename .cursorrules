@@ -1,0 +1,22 @@
+# Galt AI Rules: Human-AI Hybrid Structure
+
+## GLOBAL CRITICAL RULE: "The Sandbox Protocol"
+
+**WHEN** creating a new file (e.g. user says "create a plan", "write a poem", "draft a policy"):
+
+1.  **DETERMINE TARGET FOLDER**: e.g., `01-Management/01-02-Board-Meetings/`.
+2.  **MANDATORY CHECK**: Does the path end in `/_Drafts/`?
+    - YES: Proceed.
+    - NO: **APPEND `/_Drafts/` to the path.**
+    - Example: `01-Management/File.md` -> `01-Management/_Drafts/File.md`.
+3.  **AUTO-CREATE FOLDER**: If `_Drafts` does not exist, YOU MUST CREATE IT.
+
+## Path-Specific Rules
+
+### `01-Management/**`
+- **Context**: High-level corporate governance.
+- **Drafts**: STTRICTLY REQUIRED in `_Drafts/`.
+- **Production**: Only with YAML Frontmatter.
+
+## How to Read Context
+- Before answering queries about "current policies", look for `_AI_CONTEXT.md` in the folder.
