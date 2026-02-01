@@ -7,7 +7,7 @@ status: approved
 # 2. Управление доступом (Обязательно для ИИ)
 ai_access: true
 owner: Management
-author: @ainabige
+author: @levadiani
 classification: internal
 
 # 3. Контекст для ИИ (Рекомендуется)

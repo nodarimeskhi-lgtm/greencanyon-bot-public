@@ -7,7 +7,7 @@ status: approved
 # 2. Управление доступом (Обязательно для ИИ)
 ai_access: true
 owner: Management
-author: @ainabige
+author: @levadiani
 classification: internal
 
 # 3. Контекст для ИИ (Рекомендуется)
@@ -41,11 +41,11 @@ language: ru
 
 | Файл | ID | Статус | Автор |
 |------|-----|--------|-------|
-| README.md | `structure-management-v02-readme` | ✅ approved | @ainabige |
-| Structure_Instruction.md | `structure-instruction-v02` | ✅ approved | @ainabige |
-| Rules_Instruction.md | `rules-instruction-v02` | ✅ approved | @ainabige |
-| Interaction_Instruction.md | `interaction-instruction-v02` | ✅ approved | @ainabige |
-| Human_Behavior_Guide.md | `human-behavior-guide-v02` | ✅ approved | @ainabige |
+| README.md | `structure-management-v02-readme` | ✅ approved | @levadiani |
+| Structure_Instruction.md | `structure-instruction-v02` | ✅ approved | @levadiani |
+| Rules_Instruction.md | `rules-instruction-v02` | ✅ approved | @levadiani |
+| Interaction_Instruction.md | `interaction-instruction-v02` | ✅ approved | @levadiani |
+| Human_Behavior_Guide.md | `human-behavior-guide-v02` | ✅ approved | @levadiani |
 
 ### Формат YAML заголовков (согласно v0.5)
 
@@ -59,7 +59,7 @@ status: approved
 # 2. Управление доступом (Обязательно для ИИ)
 ai_access: true
 owner: Management
-author: @ainabige
+author: @levadiani
 classification: internal
 
 # 3. Контекст для ИИ (Рекомендуется)
@@ -127,7 +127,7 @@ language: ru
 ### 4.4. Обновление YAML заголовков
 
 - ✅ Добавлены пронумерованные секции из v0.5
-- ✅ Добавлено поле `author` с форматом GitUser (`@ainabige`)
+- ✅ Добавлено поле `author` с форматом GitUser (`@levadiani`)
 - ✅ Добавлено поле `language: ru`
 - ✅ Исправлены названия папок в Structure_Instruction.md (`1.1.` → `1-1-`)
 
