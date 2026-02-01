@@ -1,16 +1,13 @@
 ---
-# 1. Идентификация (Обязательно)
 id: structure-instruction-v02
 type: instruction
 status: approved
 
-# 2. Управление доступом (Обязательно для ИИ)
 ai_access: true
 owner: Management
 author: @levadiani
 classification: internal
 
-# 3. Контекст для ИИ (Рекомендуется)
 summary: "Определяет стандартную иерархию папок компании Galt и структуру проектов на основе PMBOK/ISO 21500."
 topics: [structure, folders, projects, organization]
 language: ru

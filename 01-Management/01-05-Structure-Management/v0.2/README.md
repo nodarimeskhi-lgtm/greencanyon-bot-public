@@ -1,16 +1,13 @@
 ---
-# 1. Идентификация (Обязательно)
 id: structure-management-v02-readme
 type: instruction
 status: approved
 
-# 2. Управление доступом (Обязательно для ИИ)
 ai_access: true
 owner: Management
 author: @levadiani
 classification: internal
 
-# 3. Контекст для ИИ (Рекомендуется)
 summary: "Главный README файл раздела управления структурой v0.2, содержащий ссылки на все инструкции."
 topics: [structure, management, documentation]
 language: ru

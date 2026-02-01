@@ -1,16 +1,13 @@
 ---
-# 1. Идентификация (Обязательно)
 id: rules-instruction-v02
 type: instruction
 status: approved
 
-# 2. Управление доступом (Обязательно для ИИ)
 ai_access: true
 owner: Management
 author: @levadiani
 classification: internal
 
-# 3. Контекст для ИИ (Рекомендуется)
 summary: "Определяет правила именования файлов, YAML метаданные и использование _AI_CONTEXT.md и _Drafts."
 topics: [rules, metadata, naming, ai-context]
 language: ru
