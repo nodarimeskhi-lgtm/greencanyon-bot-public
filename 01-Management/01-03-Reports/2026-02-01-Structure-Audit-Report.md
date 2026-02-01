@@ -1,12 +1,19 @@
 ---
+# 1. Идентификация (Обязательно)
 id: structure-audit-report-2026-02-01
 type: report
 status: approved
+
+# 2. Управление доступом (Обязательно для ИИ)
 ai_access: true
 owner: Management
+author: @ainabige
 classification: internal
+
+# 3. Контекст для ИИ (Рекомендуется)
 summary: "Отчёт об аудите структуры проекта Galt и маркировке документации v0.2 как утверждённой."
 topics: [audit, structure, v0.2, compliance]
+language: ru
 ---
 
 # Отчёт: Аудит Структуры и Маркировка v0.2
@@ -14,7 +21,7 @@ topics: [audit, structure, v0.2, compliance]
 **Дата:** 2026-02-01  
 **Исполнитель:** AI-агент Antigravity  
 **Статус:** Завершено  
-**Обновлено:** 04:23
+**Последнее обновление:** 04:48
 
 ---
 
@@ -24,20 +31,43 @@ topics: [audit, structure, v0.2, compliance]
 2. Провести аудит всего проекта Galt на соответствие правилам v0.2
 3. Исправить выявленные ошибки
 4. Создать папки `_Drafts` где они отсутствуют
+5. Обновить формат YAML заголовков согласно v0.5
 
 ---
 
 ## 2. Маркировка документации v0.2
 
-Все 5 файлов в `01-Management/01-05-Structure-Management/v0.2` были дополнены YAML frontmatter со статусом `approved`:
+Все 5 файлов в `01-Management/01-05-Structure-Management/v0.2` были дополнены YAML frontmatter:
 
-| Файл | ID | Статус |
-|------|-----|--------|
-| README.md | `structure-management-v02-readme` | ✅ approved |
-| Structure_Instruction.md | `structure-instruction-v02` | ✅ approved |
-| Rules_Instruction.md | `rules-instruction-v02` | ✅ approved |
-| Interaction_Instruction.md | `interaction-instruction-v02` | ✅ approved |
-| Human_Behavior_Guide.md | `human-behavior-guide-v02` | ✅ approved |
+| Файл | ID | Статус | Автор |
+|------|-----|--------|-------|
+| README.md | `structure-management-v02-readme` | ✅ approved | @ainabige |
+| Structure_Instruction.md | `structure-instruction-v02` | ✅ approved | @ainabige |
+| Rules_Instruction.md | `rules-instruction-v02` | ✅ approved | @ainabige |
+| Interaction_Instruction.md | `interaction-instruction-v02` | ✅ approved | @ainabige |
+| Human_Behavior_Guide.md | `human-behavior-guide-v02` | ✅ approved | @ainabige |
+
+### Формат YAML заголовков (согласно v0.5)
+
+```yaml
+---
+# 1. Идентификация (Обязательно)
+id: unique-slug
+type: instruction
+status: approved
+
+# 2. Управление доступом (Обязательно для ИИ)
+ai_access: true
+owner: Management
+author: @ainabige
+classification: internal
+
+# 3. Контекст для ИИ (Рекомендуется)
+summary: "..."
+topics: [...]
+language: ru
+---
+```
 
 ---
 
@@ -58,12 +88,6 @@ topics: [audit, structure, v0.2, compliance]
 | 08-Sales-Marketing | ✅ | ✅ | ✅ создано |
 | 09-IT-Security | ✅ | ✅ | ✅ создано |
 
-### 3.2. Выявленные и исправленные нарушения
-
-**Проект Tsalka — Нарушение правил именования папок**
-
-Папки использовали пробелы и точки (`1. Management`) вместо дефисов (`1-Management`), что противоречит разделу 2.2 Rules_Instruction.md.
-
 ---
 
 ## 4. Исправленные ошибки
@@ -82,67 +106,39 @@ topics: [audit, structure, v0.2, compliance]
 | 6. Sales | 6-Sales |
 | 9. Archive-Tsalka | 9-Archive-Tsalka |
 
-**Подпапки (25 шт):**
+**Подпапки (25 шт):** Все переименованы по шаблону `X.Y. Name` → `X-Y-Name`
 
-Все подпапки переименованы по шаблону `X.Y. Name` → `X-Y-Name`:
-- 1.1. Charter → 1-1-Charter
-- 1.2. Schedule → 1-2-Schedule
-- 2.1. Land → 2-1-Land
-- 3.1. Concept → 3-1-Concept
-- и т.д.
+### 4.2. Созданные папки _Drafts (9 шт)
 
-### 4.2. Добавленные файлы контекста
+- `00-General/_Drafts/`
+- `02-HR/_Drafts/`
+- `03-Finance/_Drafts/`
+- `04-Legal/_Drafts/`
+- `05-Projects/_Drafts/`
+- `06-Engineering-Technical/_Drafts/`
+- `07-Procurement-Logistics/_Drafts/`
+- `08-Sales-Marketing/_Drafts/`
+- `09-IT-Security/_Drafts/`
+
+### 4.3. Добавленные файлы контекста
 
 - ✅ Создан `_AI_CONTEXT.md` в `01-Management/01-01-Strategy`
 
-### 4.3. Созданные папки _Drafts
+### 4.4. Обновление YAML заголовков
 
-Добавлены папки `_Drafts` с файлами `.gitkeep` в следующих разделах:
+- ✅ Добавлены пронумерованные секции из v0.5
+- ✅ Добавлено поле `author` с форматом GitUser (`@ainabige`)
+- ✅ Добавлено поле `language: ru`
+- ✅ Исправлены названия папок в Structure_Instruction.md (`1.1.` → `1-1-`)
 
-| Раздел | Путь |
-|--------|------|
-| 00-General | `00-General/_Drafts/` |
-| 02-HR | `02-HR/_Drafts/` |
-| 03-Finance | `03-Finance/_Drafts/` |
-| 04-Legal | `04-Legal/_Drafts/` |
-| 05-Projects | `05-Projects/_Drafts/` |
-| 06-Engineering-Technical | `06-Engineering-Technical/_Drafts/` |
-| 07-Procurement-Logistics | `07-Procurement-Logistics/_Drafts/` |
-| 08-Sales-Marketing | `08-Sales-Marketing/_Drafts/` |
-| 09-IT-Security | `09-IT-Security/_Drafts/` |
+### 4.5. Расширение Rules_Instruction.md
 
-**Итого создано: 9 папок _Drafts**
+- ✅ Добавлена документация для секций "Взаимосвязи" и "Жизненный цикл"
+- ✅ Добавлены поля: `mentions`, `related_files`, `dependencies`, `validity`, `next_review`
 
 ---
 
-## 5. Итоговое состояние
-
-```
-D:\OneDrive\Business\Galt\
-├── 00-General/               ✅ (+_Drafts)
-├── 01-Management/            ✅
-│   ├── 01-01-Strategy/       ✅ (+_AI_CONTEXT.md)
-│   ├── 01-02-Board-Meetings/ ✅
-│   ├── 01-03-Reports/        ✅
-│   ├── 01-04-Partnerships/   ✅
-│   └── 01-05-Structure-Management/
-│       ├── v0.1/
-│       └── v0.2/             ✅ (approved)
-├── 02-HR/                    ✅ (+_Drafts)
-├── 03-Finance/               ✅ (+_Drafts)
-├── 04-Legal/                 ✅ (+_Drafts)
-├── 05-Projects/              ✅ (+_Drafts)
-│   └── Tsalka/               ✅ (исправлено)
-├── 06-Engineering-Technical/ ✅ (+_Drafts)
-├── 07-Procurement-Logistics/ ✅ (+_Drafts)
-├── 08-Sales-Marketing/       ✅ (+_Drafts)
-├── 09-IT-Security/           ✅ (+_Drafts)
-└── 99-Archive/               ✅
-```
-
----
-
-## 6. Статистика изменений
+## 5. Статистика изменений
 
 | Категория | Количество |
 |-----------|------------|
@@ -150,15 +146,31 @@ D:\OneDrive\Business\Galt\
 | Папок переименовано | 32 |
 | Папок _Drafts создано | 9 |
 | Файлов _AI_CONTEXT.md создано | 1 |
-| **Всего изменений** | **47** |
+| YAML заголовков обновлено | 5 |
+| **Всего изменений** | **52** |
 
 ---
 
-## 7. Рекомендации
+## 6. Итоговое состояние
 
-1. **Добавить `_AI_CONTEXT.md`** в подпапки второго уровня (00-01, 02-01 и т.д.)
-2. **Добавить `_AI_CONTEXT.md`** во все подпапки проекта Tsalka
-3. Регулярно проводить аудит структуры при добавлении новых проектов
+```
+D:\OneDrive\Business\Galt\
+├── 00-General/               ✅ (+_Drafts)
+├── 01-Management/            ✅
+│   ├── 01-01-Strategy/       ✅ (+_AI_CONTEXT.md)
+│   └── 01-05-Structure-Management/
+│       └── v0.2/             ✅ (approved, YAML v0.5)
+├── 02-HR/                    ✅ (+_Drafts)
+├── 03-Finance/               ✅ (+_Drafts)
+├── 04-Legal/                 ✅ (+_Drafts)
+├── 05-Projects/              ✅ (+_Drafts)
+│   └── Tsalka/               ✅ (переименовано)
+├── 06-Engineering-Technical/ ✅ (+_Drafts)
+├── 07-Procurement-Logistics/ ✅ (+_Drafts)
+├── 08-Sales-Marketing/       ✅ (+_Drafts)
+├── 09-IT-Security/           ✅ (+_Drafts)
+└── 99-Archive/               ✅
+```
 
 ---
 
