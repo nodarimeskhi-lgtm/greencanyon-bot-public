@@ -11,6 +11,16 @@
     - Example: `01-Management/File.md` -> `01-Management/_Drafts/File.md`.
 3.  **AUTO-CREATE FOLDER**: If `_Drafts` does not exist, YOU MUST CREATE IT.
 
+## Metadata Protocol
+
+**WHEN** generating any new document or updating a document for production:
+1.  **MANDATORY FIELD**: Include `model: [Model Name]` in the YAML frontmatter.
+2.  **EXAMPLE**: `model: Antigravity (Gemini 3 Flash)`
+3.  **EXAMPLE**: `model: Antigravity (Gemini 3 Pro(High))`
+4.  **EXAMPLE**: `model: Antigravity (Gemini 3 Pro(Low))`
+5.  **EXAMPLE**: `model: Antigravity (Claude Sonnet 4.5)`
+6.  **EXAMPLE**: `model: Antigravity (Claude Opus 4.5)`
+
 ## Path-Specific Rules
 
 ### `01-Management/**`
