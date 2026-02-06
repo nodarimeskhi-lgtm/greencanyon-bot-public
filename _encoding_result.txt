@@ -1,0 +1,4 @@
+First 10 bytes (hex): EF BB BF 23 20 43 68 61 6E 67
+BOM: UTF-8 (EF BB BF)
+First line: # Changelog Ð°ÑƒÐ´Ð¸Ñ‚Ð° ÑÑ‚Ñ€ÑƒÐºÑ‚ÑƒÑ€Ñ‹ Galt (v0.3)
+UTF-8 decode has replacement chars (invalid bytes): False

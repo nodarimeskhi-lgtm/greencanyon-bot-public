@@ -1,7 +1,7 @@
 ---
 id: structure-management-v03-readme
 type: instruction
-status: approved
+status: obsolete
 
 ai_access: true
 owner: Management
@@ -45,4 +45,4 @@ language: ru
 - [[Project_Deployment_Template]]
 
 ---
-*Статус: Approved v0.3 (2026-02-04)*
+*Статус: Obsolete v0.3 (2026-02-04) — Заменён на v0.4*
