@@ -1,9 +1,23 @@
-# Context: IT & Security
+# Контекст: 09-IT-Security
 
-## Purpose
-Infrastructure, security policies, access controls, and software licenses.
+## Назначение
+ИТ-инфраструктура и безопасность: доступы, сетевая архитектура, лицензии ПО, политики ИБ.
 
-## Rules
-- **Drafts**: MUST be created in `_Drafts/`.
-- **Security**: CRITICAL. Do not put secrets (passwords) in markdown files.
-- **Naming**: `Policy_InfoSec_[Name].md`
+## Владение (Context Owners)
+- **Role**: IT-директор (CTO/CIO)
+- **Team**: IT и безопасность
+- **Категория по Минцбергу**: Техноструктура
+
+## Координация
+- **Связанные папки**: Все департаменты (цифровая инфраструктура для всех)
+- **Права принятия решений**: Техническая архитектура — CTO; политики безопасности — CTO+CEO
+
+## Правила для ИИ
+- Где создавать черновики: `./_Drafts`
+- **ВАЖНО**: Не хранить пароли и секреты в markdown-файлах
+- Именование: `Policy_InfoSec_[Name].md`
+
+## Связанные документы
+
+- [[Structure_Instruction]]
+- [[Rules_Instruction]]

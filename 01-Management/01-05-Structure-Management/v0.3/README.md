@@ -22,21 +22,27 @@ language: ru
 
 ## Состав документации
 
-1.  **[Структура (Structure)](Structure_Instruction.md)**
+1.  **[[Structure_Instruction]]** — Структура (Structure)
     *   *Для кого*: Для всех сотрудников и системных администраторов.
     *   *О чем*: Какие папки создавать, где что хранить, иерархия проектов.
 
-2.  **[Правила Данных (Rules)](Rules_Instruction.md)**
+2.  **[[Rules_Instruction]]** — Правила Данных (Rules)
     *   *Для кого*: Для тех, кто создает документы.
     *   *О чем*: Как именовать файлы, какие метаданные (YAML) добавлять, форматы.
 
-3.  **[Взаимодействие (Interaction)](Interaction_Instruction.md)**
+3.  **[[Interaction_Instruction]]** — Взаимодействие (Interaction)
     *   *Для кого*: Для пользователей ИИ-агентов и разработчиков промптов.
     *   *О чем*: Как публиковать документы, как работают `_Drafts` и `_AI_CONTEXT.md`.
 
-4.  **[Гайд для Людей (Human Guide)](Human_Behavior_Guide.md)**
+4.  **[[Human_Behavior_Guide]]** — Гайд для Людей (Human Guide)
     *   *Для кого*: Для людей.
     *   *О чем*: Философия системы, простые привычки для эффективной работы.
+
+## Связанные документы
+
+- [[Organizational_Roles]]
+- [[Structure_Analysis]]
+- [[Project_Deployment_Template]]
 
 ---
 *Статус: Approved v0.3 (2026-02-04)*

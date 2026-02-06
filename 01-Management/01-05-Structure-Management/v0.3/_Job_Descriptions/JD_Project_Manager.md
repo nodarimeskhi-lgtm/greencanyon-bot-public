@@ -244,6 +244,13 @@ mintzberg_category: Операционное ядро
 
 8.3. Изменения в инструкцию вносятся приказом Генерального директора.
 
+## Связанные документы
+
+- [[Organizational_Roles]]
+- [[Structure_Instruction]]
+- [[Project_Deployment_Template]]
+- [[Rules_Instruction]]
+
 ---
 
 **Статус документа**: DRAFT  

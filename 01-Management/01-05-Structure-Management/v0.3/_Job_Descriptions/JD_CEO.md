@@ -201,6 +201,12 @@ mintzberg_category: Стратегическая вершина
 
 8.2. Изменения в инструкцию вносятся решением Совета Директоров.
 
+## Связанные документы
+
+- [[Organizational_Roles]]
+- [[Structure_Instruction]]
+- [[Rules_Instruction]]
+
 ---
 
 **Статус документа**: DRAFT  

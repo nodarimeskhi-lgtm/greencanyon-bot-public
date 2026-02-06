@@ -54,3 +54,11 @@ language: ru
 4.  Переименовываете в `2026-Strategy.md`.
 5.  Добавляете сверху: `status: approved`.
 6.  Теперь это закон.
+
+## Связанные документы
+
+- [[README]]
+- [[Rules_Instruction]]
+- [[Interaction_Instruction]]
+- [[Structure_Instruction]]
+- [[Project_Deployment_Template]]

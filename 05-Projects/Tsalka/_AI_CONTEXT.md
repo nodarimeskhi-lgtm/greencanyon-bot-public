@@ -1,8 +1,28 @@
-# Context: Project Tsalka
+# Контекст Проекта: Tsalka
 
-## Purpose
-Specific activities related to the Tsalka project.
+## Обзор
+Девелоперский проект в регионе Цалка, Грузия. Эко-деревня и курорт Green Canyon.
 
-## Rules
-- **Drafts**: MUST be created in `_Drafts/`.
-- **Naming**: `Tsalka_[DocType]_[Topic].md`
+## Ключевые параметры
+- **Тип**: Девелопмент
+- **Локация**: Цалка, Грузия
+- **Статус**: Активный
+
+## Владение (Context Owners)
+- **Role**: Руководитель проекта (PM)
+- **Team**: Проектная команда Tsalka
+- **Категория по Минцбергу**: Операционное ядро
+
+## Координация
+- **Связанные папки**: 04-02-Contracts-Templates, 06-01-Norms, 07-01-Vendor-List
+- **Права принятия решений**: Оперативные — PM; бюджетные — CFO; стратегические — CEO
+
+## Правила для ИИ
+- Где создавать черновики: `./_Drafts`
+- Именование: `Tsalka_[DocType]_[Topic].md`
+
+## Связанные документы
+
+- [[Structure_Instruction]]
+- [[Project_Deployment_Template]]
+- [[Rules_Instruction]]

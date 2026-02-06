@@ -9,4 +9,10 @@
 *   **01-02-Board-Meetings**: Протоколы совета директоров.
 *   **01-03-Reports**: Сводная отчетность для акционеров.
 *   **01-04-Partnerships**: Ключевые партнерства и альянсы.
-*   **01-05-Structure-Management**: Правила и обоснование структуры компании (Governance).
+*   **01-05-Structure-Management**: Правила и обоснование структуры компании (Governance). См. [[README]] (v0.3).
+
+## Связанные документы
+
+- [[Structure_Instruction]]
+- [[Rules_Instruction]]
+- [[Organizational_Roles]]

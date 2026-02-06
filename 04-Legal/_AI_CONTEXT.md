@@ -1,9 +1,23 @@
-# Context: Legal
+# Контекст: 04-Legal
 
-## Purpose
-Contracts, compliance documents, and regulatory filings.
+## Назначение
+Юридическое сопровождение: корпоративные документы, шаблоны договоров, судебные дела, комплаенс.
 
-## Rules
-- **Drafts**: MUST be created in `_Drafts/`.
-- **Review**: All documents here require strict review.
-- **Naming**: `Contract_[Party]_[Subject]_[Date].md`
+## Владение (Context Owners)
+- **Role**: Главный юрист
+- **Team**: Юридический отдел
+- **Категория по Минцбергу**: Вспомогательный персонал
+
+## Координация
+- **Связанные папки**: 05-Projects/*/2-4-Project-Contracts, 01-04-Partnerships
+- **Права принятия решений**: Подготовка документов — юрист; подпись — CEO
+
+## Правила для ИИ
+- Где создавать черновики: `./_Drafts`
+- Все документы требуют строгой проверки
+- Именование: `Contract_[Party]_[Subject]_[Date].md`
+
+## Связанные документы
+
+- [[Structure_Instruction]]
+- [[Rules_Instruction]]

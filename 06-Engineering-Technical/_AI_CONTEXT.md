@@ -1,8 +1,22 @@
-# Context: Engineering & Technical
+# Контекст: 06-Engineering-Technical
 
-## Purpose
-Technical specs, architectural decisions, and engineering standards.
+## Назначение
+Инженерно-технический отдел: нормативная база, типовые решения, охрана труда, паспорта оборудования.
 
-## Rules
-- **Drafts**: MUST be created in `_Drafts/`.
-- **Naming**: `TechSpec_[Feature]_[Version].md`
+## Владение (Context Owners)
+- **Role**: Главный инженер / Директор ПТО
+- **Team**: Инженерно-технический отдел
+- **Категория по Минцбергу**: Техноструктура
+
+## Координация
+- **Связанные папки**: 05-Projects/*/3-Design, 05-Projects/*/4-Construction
+- **Права принятия решений**: Технические стандарты — Главный инженер
+
+## Правила для ИИ
+- Где создавать черновики: `./_Drafts`
+- Именование: `TechSpec_[Feature]_[Version].md`
+
+## Связанные документы
+
+- [[Structure_Instruction]]
+- [[Rules_Instruction]]

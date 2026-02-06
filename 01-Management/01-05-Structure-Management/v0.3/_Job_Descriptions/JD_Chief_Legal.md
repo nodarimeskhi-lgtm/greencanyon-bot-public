@@ -217,6 +217,12 @@ mintzberg_category: Вспомогательный персонал
 
 8.2. Изменения в инструкцию вносятся приказом Генерального директора.
 
+## Связанные документы
+
+- [[Organizational_Roles]]
+- [[Structure_Instruction]]
+- [[Rules_Instruction]]
+
 ---
 
 **Статус документа**: DRAFT  

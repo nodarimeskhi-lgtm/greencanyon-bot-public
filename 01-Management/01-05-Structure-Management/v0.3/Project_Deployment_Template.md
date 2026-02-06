@@ -31,6 +31,7 @@ language: ru
         *   `1-4-Risks`
         *   `1-5-Meetings`
         *   `1-6-Correspondence`
+        *   `1-7-Scope`
         *   `_Drafts`
     *   [ ] `2-Permits-Legal` (ИРД)
         *   `2-1-Land`
@@ -48,11 +49,28 @@ language: ru
         *   `4-1-Site-Log`
         *   `4-2-Photo-Reports`
         *   `4-3-Acts`
+        *   `4-4-Safety`
+        *   `4-5-Quality-Control`
+        *   `4-6-Author-Supervision`
         *   `_Drafts`
     *   [ ] `5-Supply` (Снабжение)
         *   `5-1-Requests`
         *   `5-2-Invoices`
         *   `5-3-Logistics`
+        *   `_Drafts`
+    *   [ ] `6-Sales` (Продажи — для девелоперских проектов)
+        *   `6-1-Inventory`
+        *   `6-2-Clients`
+        *   `_Drafts`
+    *   [ ] `7-Commissioning` (Ввод в эксплуатацию)
+        *   `7-1-Acceptance-Acts`
+        *   `7-2-As-Built`
+        *   `7-3-Passports`
+        *   `_Drafts`
+    *   [ ] `8-Closing` (Закрытие проекта)
+        *   `8-1-Final-Report`
+        *   `8-2-Lessons-Learned`
+        *   `8-3-Handover`
         *   `_Drafts`
     *   [ ] `9-Archive-[ProjectName]` (Архив)
 
@@ -125,3 +143,11 @@ language: ru
 *   [ ] Файл `_AI_CONTEXT.md` в корне проекта заполнен.
 *   [ ] Создан Устав (Charter) или карточка проекта.
 *   [ ] Проверено отсутствие пробелов в путях.
+
+## Связанные документы
+
+- [[README]]
+- [[Structure_Instruction]]
+- [[Rules_Instruction]]
+- [[Organizational_Roles]]
+- [[Interaction_Instruction]]
