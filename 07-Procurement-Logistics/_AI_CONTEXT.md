@@ -1,8 +1,22 @@
-# Context: Procurement & Logistics
+# Контекст: 07-Procurement-Logistics
 
-## Purpose
-Supply chain, vendor contracts, logicstics plans, and inventory.
+## Назначение
+Снабжение и логистика: база поставщиков, мониторинг цен, тендеры, маршруты доставки.
 
-## Rules
-- **Drafts**: MUST be created in `_Drafts/`.
-- **Naming**: `Order_[Vendor]_[Date].md`
+## Владение (Context Owners)
+- **Role**: Начальник отдела снабжения
+- **Team**: Снабжение и логистика
+- **Категория по Минцбергу**: Вспомогательный персонал
+
+## Координация
+- **Связанные папки**: 05-Projects/*/5-Supply, 03-01-Planning
+- **Права принятия решений**: Закупки до лимита — снабжение; выше лимита — CFO/CEO
+
+## Правила для ИИ
+- Где создавать черновики: `./_Drafts`
+- Именование: `Order_[Vendor]_[Date].md`
+
+## Связанные документы
+
+- [[Structure_Instruction]]
+- [[Rules_Instruction]]

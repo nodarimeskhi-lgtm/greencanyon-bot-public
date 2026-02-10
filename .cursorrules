@@ -1,5 +1,7 @@
 # Galt AI Rules: Human-AI Hybrid Structure
 
+> **Source of Truth**: Полные правила описаны в [[Rules_Instruction]] и [[Structure_Instruction]] (папка `01-Management/01-05-Structure-Management/v0.4/`). Ниже — краткая выжимка для быстрого доступа AI-агентами.
+
 ## GLOBAL CRITICAL RULE: "The Sandbox Protocol"
 
 **WHEN** creating a new file (e.g. user says "create a plan", "write a poem", "draft a policy"):
@@ -25,7 +27,7 @@
 
 ### `01-Management/**`
 - **Context**: High-level corporate governance.
-- **Drafts**: STTRICTLY REQUIRED in `_Drafts/`.
+- **Drafts**: STRICTLY REQUIRED in `_Drafts/`.
 - **Production**: Only with YAML Frontmatter.
 
 ## How to Read Context
@@ -36,3 +38,13 @@
 **CRITICAL RULE**: Always respond and generate content (including Implementation Plans, Task descriptions, and file content) in the **same language** used by the user in their request, unless explicitly asked otherwise.
 - Если запрос на русском (RU), план реализации, описание задач и ответы ДОЛЖНЫ быть на русском языке.
 - This ensures clarity and consistency with the user's workflow.
+
+## Foam: граф зависимостей документов
+
+**WHEN** creating or editing any markdown document in the repository:
+
+1. **Wikilinks**: When the document references another .md file in the repo, add a Foam wikilink: `[[FileNameWithoutExtension]]` or `[[FileName#Section Title]]` for a specific section. The text in `[[...]]` MUST match the target file name without `.md`.
+2. **Related section**: In new or significantly updated documents, add a "Связанные документы" (or "Related") section at the end listing Foam links to: parent README, documents this one depends on, and logically related documents. Format: bullet list with `[[DocName]]`.
+3. **Placeholders**: When referring to a document that does not yet exist, still add the wikilink (e.g. `[[Planned_Doc_Name]]`) so Foam shows it as a placeholder in the graph.
+4. **Frontmatter for graph**: In YAML frontmatter, set `type: note | instruction | policy | template` so the Foam graph can style nodes by type.
+5. **Do not remove** existing markdown links; add Foam wikilinks in addition or replace only where the goal is to build the dependency graph.

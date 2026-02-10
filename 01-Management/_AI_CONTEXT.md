@@ -1,11 +1,23 @@
-# Context: Management Folder
+# Контекст: 01-Management
 
-Describes top-level management structure, policies, and strategic documents.
+## Назначение
+Стратегическое управление компанией: стратегия, Совет директоров, отчётность, партнёрства и управление структурой.
 
-## Ownership
-Owner: CEO / General Management
+## Владение (Context Owners)
+- **Role**: CEO / Генеральный директор
+- **Team**: Топ-менеджмент
+- **Категория по Минцбергу**: Стратегическая вершина
 
-## Rules
-- All final policies must have YAML frontmatter.
-- Drafts go to `_Drafts/`.
-- File naming convention: `[Type]_[Topic]_[Version].md` (e.g. `Policy_Vacation_v1.md`)
+## Координация
+- **Связанные папки**: Все департаменты (01-09)
+- **Права принятия решений**: Стратегические решения — CEO/Совет директоров
+
+## Правила для ИИ
+- Где создавать черновики: `./_Drafts`
+- Все финальные документы должны иметь YAML frontmatter
+- Именование: `[Type]_[Topic]_[Version].md` (напр. `Policy_Vacation_v1.md`)
+
+## Связанные документы
+
+- [[Structure_Instruction]]
+- [[Rules_Instruction]]

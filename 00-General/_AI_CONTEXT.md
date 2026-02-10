@@ -1,8 +1,22 @@
-# Context: General Information
+# Контекст: 00-General
 
-## Purpose
-General company information, templates, and high-level announcements.
+## Назначение
+Общая информация компании: миссия, ценности, брендбук, шаблоны, контактный справочник.
 
-## Rules
-- **Drafts**: MUST be created in `_Drafts/`.
-- **Naming**: Descriptive and clear.
+## Владение (Context Owners)
+- **Role**: CEO / HR-директор
+- **Team**: Администрация / Топ-менеджмент
+- **Категория по Минцбергу**: Идеология
+
+## Координация
+- **Связанные папки**: 02-HR (кадровые политики), 08-Sales-Marketing (бренд)
+- **Права принятия решений**: Утверждение — CEO
+
+## Правила для ИИ
+- Где создавать черновики: `./_Drafts`
+- Именование: описательное, понятное
+
+## Связанные документы
+
+- [[Structure_Instruction]]
+- [[Rules_Instruction]]

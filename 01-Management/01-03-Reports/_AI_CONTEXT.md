@@ -6,3 +6,8 @@ Periodic internal and external business reports.
 ## Rules
 - **Drafts**: MUST be created in `_Drafts/`.
 - **Naming**: `Report_[Topic]_[YYYY-MM-DD].md`
+
+## Связанные документы
+
+- [[Structure_Instruction]]
+- [[Rules_Instruction]]

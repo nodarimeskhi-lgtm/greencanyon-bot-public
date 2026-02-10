@@ -1,9 +1,22 @@
-# Context: Sales & Marketing
+# Контекст: 08-Sales-Marketing
 
-## Purpose
-Marketing materials, sales strategies, customer data, and branding.
+## Назначение
+Продажи и маркетинг: материалы, скрипты продаж, CRM-аналитика, анализ конкурентов.
 
-## Rules
-- **Drafts**: MUST be created in `_Drafts/`.
-- **Creative Content**: Drafts here are for creative iteration.
-- **Naming**: `Campaign_[Name]_[Channel].md`
+## Владение (Context Owners)
+- **Role**: Коммерческий директор (CCO)
+- **Team**: Продажи и маркетинг
+- **Категория по Минцбергу**: Операционное ядро
+
+## Координация
+- **Связанные папки**: 05-Projects/*/6-Sales, 00-02-BrandBook
+- **Права принятия решений**: Маркетинговые кампании — CCO; бюджет — CFO/CEO
+
+## Правила для ИИ
+- Где создавать черновики: `./_Drafts`
+- Именование: `Campaign_[Name]_[Channel].md`
+
+## Связанные документы
+
+- [[Structure_Instruction]]
+- [[Rules_Instruction]]

@@ -1,9 +1,23 @@
-# Context: Human Resources (HR)
+# Контекст: 02-HR
 
-## Purpose
-Employee records, recruiting, policies, and onboarding.
+## Назначение
+Кадровое управление: подбор, адаптация, личные дела, регламенты и политики.
 
-## Rules
-- **Drafts**: MUST be created in `_Drafts/`.
-- **Sensitive Data**: Ensure no PII is exposed in plain text drafts if possible.
-- **Naming**: `[EmployeeName]_[DocType]_[Date].md` or `Policy_[Name]_[Version].md`
+## Владение (Context Owners)
+- **Role**: HR-директор
+- **Team**: HR
+- **Категория по Минцбергу**: Техноструктура
+
+## Координация
+- **Связанные папки**: 00-01-Mission-Values, 03-04-Payroll
+- **Права принятия решений**: Кадровые процессы — HR-директор; найм ключевых позиций — CEO
+
+## Правила для ИИ
+- Где создавать черновики: `./_Drafts`
+- **ВАЖНО**: Не хранить персональные данные (PII) в черновиках
+- Именование: `[EmployeeName]_[DocType]_[Date].md` или `Policy_[Name]_[Version].md`
+
+## Связанные документы
+
+- [[Structure_Instruction]]
+- [[Rules_Instruction]]

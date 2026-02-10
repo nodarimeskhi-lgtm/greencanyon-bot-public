@@ -1,8 +1,22 @@
-# Context: Finance
+# Контекст: 03-Finance
 
-## Purpose
-Financial planning, reports, taxation, and accounting.
+## Назначение
+Финансовое управление: бюджеты, cash flow, бухгалтерия, зарплаты.
 
-## Rules
-- **Drafts**: MUST be created in `_Drafts/`.
-- **Naming**: `[Type]_[Period]_[Version].md` (e.g., `Report_Q1-2026_v1.md`)
+## Владение (Context Owners)
+- **Role**: Финансовый директор (CFO)
+- **Team**: Финансы и бухгалтерия
+- **Категория по Минцбергу**: Техноструктура
+
+## Координация
+- **Связанные папки**: 05-Projects/*/1-3-Budget, 07-02-Price-Analysis
+- **Права принятия решений**: Оперативные платежи — CFO; стратегические — CEO
+
+## Правила для ИИ
+- Где создавать черновики: `./_Drafts`
+- Именование: `[Type]_[Period]_[Version].md` (напр. `Report_Q1-2026_v1.md`)
+
+## Связанные документы
+
+- [[Structure_Instruction]]
+- [[Rules_Instruction]]
