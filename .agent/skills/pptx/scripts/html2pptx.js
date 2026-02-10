@@ -120,9 +120,14 @@ function validateTextBoxPosition(slideData, bodyDimensions) {
 // Helper: Add background to slide
 async function addBackground(slideData, targetSlide, tmpDir) {
   if (slideData.background.type === 'image' && slideData.background.path) {
-    let imagePath = slideData.background.path.startsWith('file://')
-      ? slideData.background.path.replace('file://', '')
-      : slideData.background.path;
+    let imagePath = slideData.background.path;
+    if (imagePath.startsWith('file://')) {
+      imagePath = imagePath.replace('file://', '');
+      if (process.platform === 'win32' && imagePath.match(/^\/[a-zA-Z]:/)) {
+        imagePath = imagePath.substring(1);
+      }
+    }
+    imagePath = decodeURIComponent(imagePath);
     targetSlide.background = { path: imagePath };
   } else if (slideData.background.type === 'color' && slideData.background.value) {
     targetSlide.background = { color: slideData.background.value };
@@ -133,7 +138,16 @@ async function addBackground(slideData, targetSlide, tmpDir) {
 function addElements(slideData, targetSlide, pres) {
   for (const el of slideData.elements) {
     if (el.type === 'image') {
-      let imagePath = el.src.startsWith('file://') ? el.src.replace('file://', '') : el.src;
+      let imagePath = el.src;
+      if (imagePath.startsWith('file://')) {
+        imagePath = imagePath.replace('file://', '');
+        // On Windows, file:///C:/path becomes /C:/path. Remove leading slash.
+        if (process.platform === 'win32' && imagePath.match(/^\/[a-zA-Z]:/)) {
+          imagePath = imagePath.substring(1);
+        }
+      }
+      imagePath = decodeURIComponent(imagePath);
+
       targetSlide.addImage({
         path: imagePath,
         x: el.position.x,
@@ -539,10 +553,10 @@ async function extractSlideData(page) {
         const computed = window.getComputedStyle(el);
         const hasBg = computed.backgroundColor && computed.backgroundColor !== 'rgba(0, 0, 0, 0)';
         const hasBorder = (computed.borderWidth && parseFloat(computed.borderWidth) > 0) ||
-                          (computed.borderTopWidth && parseFloat(computed.borderTopWidth) > 0) ||
-                          (computed.borderRightWidth && parseFloat(computed.borderRightWidth) > 0) ||
-                          (computed.borderBottomWidth && parseFloat(computed.borderBottomWidth) > 0) ||
-                          (computed.borderLeftWidth && parseFloat(computed.borderLeftWidth) > 0);
+          (computed.borderTopWidth && parseFloat(computed.borderTopWidth) > 0) ||
+          (computed.borderRightWidth && parseFloat(computed.borderRightWidth) > 0) ||
+          (computed.borderBottomWidth && parseFloat(computed.borderBottomWidth) > 0) ||
+          (computed.borderLeftWidth && parseFloat(computed.borderLeftWidth) > 0);
         const hasShadow = computed.boxShadow && computed.boxShadow !== 'none';
 
         if (hasBg || hasBorder || hasShadow) {
@@ -772,6 +786,7 @@ async function extractSlideData(page) {
 
         elements.push({
           type: 'list',
+          id: el.id,
           items: items,
           position: {
             x: pxToInch(rect.left),

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            background: #ffffff;
+        }
+
+        body {
+            width: 720pt;
+            height: 405pt;
+            margin: 0;
+            padding: 40pt;
+            background: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            padding: 40pt;
+            /* background-image handled below */
+        }
+
+        .bg-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            object-fit: cover;
+            display: block;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 0;
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h2 {
+            color: #2C3E50;
+            font-size: 32pt;
+            margin: 0 0 30pt 0;
+            text-align: center;
+        }
+
+        .features {
+            display: flex;
+            gap: 40pt;
+        }
+
+        .feature {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            width: 150pt;
+        }
+
+        .icon-box {
+            width: 60pt;
+            height: 60pt;
+            background: #27AE60;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15pt;
+        }
+
+        /* Use p for text inside icon-box */
+        .icon-symbol {
+            font-size: 30pt;
+            font-weight: bold;
+            color: white;
+            margin: 0;
+        }
+
+        p {
+            font-size: 16pt;
+            color: #333;
+            font-weight: bold;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <img src="../../05-Projects/Tsalka/6-Sales/Marketing/Assets/image_6.jpg" class="bg-image">
+    <div class="overlay"></div>
+    <div class="content">
+        <h2>Halal Lifestyle</h2>
+        <div class="features">
+            <div class="feature">
+                <div class="icon-box">
+                    <p class="icon-symbol">✓</p>
+                </div>
+                <p>No Alcohol in Public Zones</p>
+            </div>
+            <div class="feature">
+                <div class="icon-box">
+                    <p class="icon-symbol">✓</p>
+                </div>
+                <p>Halal Food Options</p>
+            </div>
+            <div class="feature">
+                <div class="icon-box">
+                    <p class="icon-symbol">✓</p>
+                </div>
+                <p>Mosque Access Nearby</p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

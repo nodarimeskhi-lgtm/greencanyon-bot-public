@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            background: #ffffff;
+        }
+
+        body {
+            width: 720pt;
+            height: 405pt;
+            margin: 0;
+            padding: 40pt;
+            background: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h2 {
+            font-size: 28pt;
+            color: #2C3E50;
+            margin: 0 0 30pt 0;
+            text-align: center;
+        }
+
+        .steps {
+            display: flex;
+            justify-content: space-between;
+            gap: 20pt;
+        }
+
+        .step {
+            flex: 1;
+            background: #ECF0F1;
+            padding: 20pt;
+            border-radius: 8pt;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Updated step-num to target p */
+        p.step-num {
+            font-size: 30pt;
+            color: #E74C3C;
+            font-weight: bold;
+            margin: 0 0 10pt 0;
+            display: block;
+        }
+
+        h3 {
+            font-size: 16pt;
+            color: #2C3E50;
+            margin: 0 0 10pt 0;
+        }
+
+        p.desc {
+            font-size: 12pt;
+            color: #7F8C8D;
+            line-height: 1.4;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>The Product: "Managed Villa"</h2>
+    <div class="steps">
+        <div class="step">
+            <p class="step-num">1</p>
+            <h3>Purchase</h3>
+            <p class="desc">You buy the freehold asset.</p>
+        </div>
+        <div class="step">
+            <p class="step-num">2</p>
+            <h3>We Manage</h3>
+            <p class="desc">We rent on Airbnb/Booking. 70% Occ.</p>
+        </div>
+        <div class="step">
+            <p class="step-num">3</p>
+            <h3>You Earn</h3>
+            <p class="desc">Quarterly dividends. 12-15% ROI.</p>
+        </div>
+    </div>
+</body>
+
+</html>
