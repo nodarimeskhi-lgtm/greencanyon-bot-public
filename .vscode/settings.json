@@ -1,9 +1,10 @@
 {
     "workbench.editorAssociations": {
-        "*.md": "vscode.markdown.preview.editor"
+        "*.md": "vscode.markdown.preview.editor",
+        "*.pptx": "default"
     },
     "files.exclude": {
-       // "**/.*": true
+        // "**/.*": true
     },
     "workbench.editor.enablePreview": false,
     "office-viewer.autoOpen": false

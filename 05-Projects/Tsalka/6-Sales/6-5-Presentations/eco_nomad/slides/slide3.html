@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            background: #ffffff;
+        }
+
+        body {
+            width: 720pt;
+            height: 405pt;
+            margin: 0;
+            padding: 30pt;
+            background: #ffffff;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h2 {
+            font-size: 28pt;
+            margin: 0 0 10pt 0;
+            color: #145A32;
+        }
+
+        p.intro {
+            font-size: 14pt;
+            color: #7F8C8D;
+            margin: 0 0 15pt 0;
+        }
+
+        .grid {
+            display: flex;
+            gap: 20pt;
+            flex: 1;
+        }
+
+        .card {
+            flex: 1;
+            background: #EAFAF1;
+            padding: 15pt;
+            border-radius: 8pt;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .icon {
+            font-size: 30pt;
+            margin-bottom: 10pt;
+            display: block;
+        }
+
+        h3 {
+            font-size: 16pt;
+            color: #1E8449;
+            margin: 0 0 10pt 0;
+        }
+
+        p.desc {
+            font-size: 12pt;
+            color: #555;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        /* Placeholder for Chart */
+        #eco-chart {
+            width: 100%;
+            height: 120pt;
+            margin-top: 10pt;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Sustainable Luxury</h2>
+    <p class="intro">Comfort without Compromise.</p>
+    <div class="grid">
+        <div class="card">
+            <p class="icon">☀️</p>
+            <h3>Energy</h3>
+            <p class="desc">Solar & Hydro powered.</p>
+            <div id="eco-chart" class="placeholder"></div>
+        </div>
+        <div class="card">
+            <p class="icon">💧</p>
+            <h3>Water</h3>
+            <p class="desc">Natural Spring Water on tap.</p>
+        </div>
+        <div class="card">
+            <p class="icon">🌱</p>
+            <h3>Food</h3>
+            <p class="desc">Organic Permaculture Gardens.</p>
+        </div>
+    </div>
+</body>
+
+</html>

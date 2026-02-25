@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            background: #ffffff;
+        }
+
+        body {
+            width: 720pt;
+            height: 405pt;
+            margin: 0;
+            padding: 40pt;
+            background: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            margin-bottom: 30pt;
+        }
+
+        h2 {
+            color: #2C3E50;
+            font-size: 28pt;
+            margin: 0 0 10pt 0;
+        }
+
+        .subtitle {
+            color: #7F8C8D;
+            font-size: 14pt;
+            font-style: italic;
+            margin: 0;
+        }
+
+        .grid {
+            display: flex;
+            gap: 30pt;
+            flex: 1;
+        }
+
+        .card {
+            flex: 1;
+            background: #f0f7f4;
+            padding: 15pt;
+            border-radius: 8pt;
+            border-left: 4pt solid #27AE60;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h3 {
+            color: #27AE60;
+            font-size: 18pt;
+            margin: 0 0 15pt 0;
+        }
+
+        p {
+            font-size: 12pt;
+            color: #555555;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .img-container {
+            width: 100%;
+            height: 120pt;
+            margin-bottom: 15pt;
+            overflow: hidden;
+            border-radius: 4pt;
+            flex-shrink: 0;
+        }
+
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h2>Absolute Privacy (The "Bosnia" Standard)</h2>
+        <p class="subtitle">Like the best private villas in Sarajevo, but closer.</p>
+    </div>
+    <div class="grid">
+        <div class="card">
+            <div class="img-container">
+                <img src="../../05-Projects/Tsalka/6-Sales/Marketing/Assets/image_3.jpg" class="card-img">
+            </div>
+            <h3>Secure Perimeter</h3>
+            <p>2.5m Stone Walls around every pool ensure total seclusion from the outside world.</p>
+        </div>
+        <div class="card">
+            <div class="img-container">
+                <img src="../../05-Projects/Tsalka/6-Sales/Marketing/Assets/image_4.jpg" class="card-img">
+            </div>
+            <h3>Family Freedom</h3>
+            <p>Complete freedom for your family to enjoy the outdoors. No prying eyes.</p>
+        </div>
+    </div>
+</body>
+
+</html>

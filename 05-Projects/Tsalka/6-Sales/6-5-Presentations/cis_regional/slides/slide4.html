@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            background: #ffffff;
+        }
+
+        body {
+            width: 720pt;
+            height: 405pt;
+            margin: 0;
+            padding: 40pt;
+            background: #ffffff;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        h2 {
+            font-size: 32pt;
+            color: #2E4053;
+            margin: 0 0 40pt 0;
+            text-align: center;
+        }
+
+        .stats {
+            display: flex;
+            gap: 40pt;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            background: #FDFEFE;
+            border: 2pt solid #D4AC0D;
+            padding: 20pt;
+            border-radius: 8pt;
+            width: 180pt;
+        }
+
+        .num {
+            font-size: 36pt;
+            color: #D4AC0D;
+            font-weight: bold;
+            margin-bottom: 10pt;
+            display: block;
+        }
+
+        .label {
+            font-size: 14pt;
+            color: #555;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Financials at a Glance</h2>
+    <div class="stats">
+        <div class="stat">
+            <p class="num">15%</p>
+            <p class="label">Target Annual Yield</p>
+        </div>
+        <div class="stat">
+            <p class="num">20%</p>
+            <p class="label">Internal Rate of Return (IRR)</p>
+        </div>
+        <div class="stat">
+            <p class="num">$35k</p>
+            <p class="label">Starting Price</p>
+        </div>
+    </div>
+</body>
+
+</html>
