@@ -42,6 +42,7 @@ You mentioned high trust in business circles. Here is how to monetize it:
 *   **Action**: Offer an "Escrow Account" model where their money is held by a reputable bank (TBC/BOG) and released to you only as construction milestones are met. This guarantees safety.
 *   **KA**: შესთავაზეთ "ესქრო ანგარიშის" მოდელი, სადაც თანხა ინახება ბანკში და გადმოგეცემათ მხოლოდ მშენებლობის ეტაპების დასრულების შემდეგ. ეს ზრდის ნდობას 100%-ით.
 
-### C. Government Backing / მთავრობის მხარდაჭერა
-*   **Strategy**: If you have any government MOUs or support letters, showcase them on Slide 1 of the presentation. It signals "State Protection".
-*   **KA**: თუ გაქვთ მემორანდუმი მთავრობასთან ან მხარდაჭერის წერილი, განათავსეთ პრეზენტაციის პირველივე გვერდზე. ეს ნიშნავს "სახელმწიფო დაცვას".
+### C. Administrative Transparency / ადმინისტრაციული გამჭვირვალობა
+*   **Strategy**: Show the reality of the work.
+*   **Action**: Showcase your valid building permits, land ownership titles, and the approved architectural site plan. In the absence of a large-scale MOU, "Hard Documents" (land registry extracts) are the best proof of legitimacy.
+*   **KA**: აჩვენეთ მშენებლობის ნებართვები, მიწის საკუთრების ამონაწერები და დამტკიცებული არქიტექტურული პროექტი. "მყარი დოკუმენტები" (ამონაწერები რეესტრიდან) არის საუკეთესო ნდობის ფაქტორი.

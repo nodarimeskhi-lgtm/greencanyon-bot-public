@@ -43,7 +43,7 @@ Can I send you a 1-page summary?"*
 ## 6. How to Handle Objections / პასუხები პრეტენზიებზე
 
 **Objection**: "Georgia is risky."
-**Answer**: *"Actually, we just signed an MOU with the Government (send Memo). Plus, Eagle Hills (Mohamed Alabbar) just put $3B here. It's the safest growing market right now."*
+**Answer**: *"Actually, we use a full **Escrow and Bank Guarantee** model (send security doc). This is the Dubai standard of safety—your funds are protected and only released as we build. Plus, we are neighbors to Eagle Hills (Mohamed Alabbar), who just put $3B here."*
 
 **Objection**: "My clients only buy ready units."
 **Answer**: *"Understood. But by the time it's ready, the price will be 40% higher. This is for your 'smart investors' who want capital appreciation, not just rental income."*
