@@ -1,19 +1,17 @@
-# Government Memorandum & Eagle Hills Strategy / სამთავრობო მემორანდუმი და Eagle Hills-ის სტრატეგია
+# Financial Security & Eagle Hills Strategy / ფინანსური უსაფრთხოება და Eagle Hills-ის სტრატეგია
 
-## 1. The Power of a "Government Memorandum" / რას ნიშნავს მემორანდუმი?
-
-For a GCC investor, a Government Memorandum (MOU) is not just a legal paper; it is a **Symbol of Safety**.
-GCC ინვესტორისთვის, სამთავრობო მემორანდუმი (MOU) არ არის მხოლოდ იურიდიული ქაღალდი; ეს არის **უსაფრთხოების სიმბოლო**.
+## 1. Financial Security: The "Escrow" Advantage / ფინანსური დაცვა
+For a GCC investor, safety is found in **Escrow & Bank Guarantees**.
+GCC ინვესტორისთვის უსაფრთხოება **Escrow და საბანკო გარანტიებშია**.
 
 ### Why do you need it? / რატომ გჭირდებათ?
-1.  **"State Protection" (სახელმწიფო დაცვა)**: It signals that the government is aware of the project and supports it. Arab investors fear "scams" or "frozen projects". An MOU proves you are a legitimate partner of the state.
-    *   *ნიშანი იმისა, რომ სახელმწიფო იცნობს და მხარს უჭერს პროექტს. ეს აქრობს "აფერის" შიშს.*
-2.  **Infrastructure Commitment (ინფრასტრუქტურული ვალდებულება)**: Often, an MOU implies the government will help with roads, water, or gas to your boundary line.
-3.  **Stability (სტაბილურობა)**: It shows long-term commitment.
+1.  **"No Completion Risk" (მშენებლობის დასრულების გარანტია)**: It ensures that if the project stops, the money is returned. This is the Dubai standard of safety.
+2.  **Milestone-Based Payments (ეტაპობრივი გადახდა)**: The developer only gets paid when the work is actually done. 
+3.  **Transparency (გამჭვირვალობა)**: A bank acts as the intermediary, protecting the buyer's interest.
 
 ### How to Explain it to Investors? / როგორ ავუხსნათ ინვესტორებს?
-*   **Pitch**: "This project is developed under a strategic Memorandum of Understanding with the Government of Georgia, guaranteeing legal transparency and infrastructural support."
-*   **KA**: "პროექტი ხორციელდება საქართველოს მთავრობასთან გაფორმებული სტრატეგიული მემორანდუმის ფარგლებში, რაც უზრუნველყოფს იურიდიულ გამჭვირვალობას და ინფრასტრუქტურულ მხარდაჭერას."
+*   **Pitch**: "We follow the same high-security financial model as the major developers in Dubai. Your funds are held in Escrow and released only upon verified construction milestones."
+*   **KA**: "ჩვენ ვიყენებთ იგივე მაღალი უსაფრთხოების ფინანსურ მოდელს, რასაც დუბაის მსხვილი დეველოპერები. თქვენი თანხა დაცულია Escrow ანგარიშზე და გაიცემა მხოლოდ მშენებლობის ეტაპების დასრულების შემდეგ."
 
 ---
 
