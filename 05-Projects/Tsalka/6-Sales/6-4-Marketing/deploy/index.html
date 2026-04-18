@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Green Canyon — Sales Portal</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600&display=swap');
+:root {
+  --bg:#f8f7f4;--card:#fff;--primary:#3d5a3e;--primary-light:#5c7e5d;
+  --primary-pale:#eef4ee;--accent:#c8a96e;--accent-h:#b5934f;
+  --text:#2c2c2c;--muted:#7a7a7a;--border:#e0ddd7;
+  --shadow:0 4px 20px rgba(0,0,0,.07);--radius:12px;
+  --free:#27ae60;--reserved:#e67e22;--sold:#7f8c8d;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text)}
+
+/* ── TOPBAR ── */
+.topbar{
+  background:var(--primary);color:#fff;height:56px;
+  display:flex;align-items:center;padding:0 20px;gap:16px;
+  position:fixed;top:0;left:0;right:0;z-index:2000;
+  box-shadow:0 2px 12px rgba(0,0,0,.25);
+}
+.topbar-logo{font-family:'Playfair Display',serif;font-size:17px;white-space:nowrap}
+.topbar-logo span{color:var(--accent)}
+.nav-tabs{display:flex;gap:4px;flex:1}
+.nav-tab{
+  background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.8);
+  padding:7px 16px;border-radius:20px;cursor:pointer;
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:500;
+  transition:all .2s;white-space:nowrap;
+}
+.nav-tab:hover{background:rgba(255,255,255,.2);color:#fff}
+.nav-tab.active{background:var(--accent);color:#fff;font-weight:700}
+.topbar-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.lang-pill{display:flex;gap:3px}
+.lang-pill button{
+  background:rgba(255,255,255,.15);border:none;color:#fff;
+  padding:4px 9px;border-radius:16px;cursor:pointer;font-size:11px;
+  font-family:'Inter',sans-serif;transition:background .2s;
+}
+.lang-pill button.active{background:var(--accent)}
+.sync-badge{
+  display:flex;align-items:center;gap:6px;font-size:11px;
+  background:rgba(255,255,255,.1);padding:4px 10px;border-radius:16px;
+  cursor:pointer;transition:background .2s;
+}
+.sync-badge:hover{background:rgba(255,255,255,.2)}
+.dot{width:7px;height:7px;border-radius:50%}
+.dot.ok{background:#4ade80;animation:pulse 2s infinite}
+.dot.err{background:#f87171}
+.dot.loading{background:#fbbf24;animation:spin .8s linear infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── PAGES ── */
+.page{display:none;position:fixed;top:56px;left:0;right:0;bottom:0}
+.page.active{display:flex;flex-direction:column}
+
+/* ══════════════════════════════════════
+   PAGE 1 — MAP
+══════════════════════════════════════ */
+#page-map{flex-direction:row}
+#leaflet-map{flex:1;height:100%;z-index:1}
+
+.map-legend{
+  position:absolute;top:12px;left:12px;z-index:1000;
+  background:rgba(255,255,255,.96);border-radius:10px;
+  padding:12px 16px;box-shadow:0 2px 12px rgba(0,0,0,.12);font-size:12px;
+}
+.map-legend h4{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:8px}
+.leg-item{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.leg-dot{width:12px;height:12px;border-radius:50%}
+.leg-sep{border:none;border-top:1px solid var(--border);margin:8px 0}
+.leg-count{font-weight:700;color:var(--primary)}
+
+.map-panel{
+  width:300px;background:var(--card);border-left:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;z-index:1001;flex-shrink:0;
+}
+.map-panel-header{background:var(--primary);color:#fff;padding:16px 18px;flex-shrink:0}
+.map-panel-header h3{font-family:'Playfair Display',serif;font-size:15px;margin-bottom:4px}
+.map-panel-header p{font-size:11px;opacity:.75}
+.map-panel-body{padding:16px;flex:1;overflow-y:auto}
+.map-no-sel{text-align:center;padding:40px 16px;color:var(--muted)}
+.map-no-sel .icon{font-size:40px;margin-bottom:12px;opacity:.3}
+.plot-id{font-size:18px;font-weight:700;color:var(--primary);margin-bottom:4px}
+.plot-zone-tag{
+  display:inline-block;padding:2px 10px;border-radius:12px;
+  font-size:11px;font-weight:700;margin-bottom:14px;
+}
+.tag-LA{background:#d6eaf8;color:#1a5276}
+.tag-LB{background:#d5f5e3;color:#1a7a3f}
+.tag-LC{background:#f9ebea;color:#922b21}
+.tag-LD{background:#fef9e7;color:#9a7d0a}
+.tag-AH{background:#f4ecf7;color:#6c3483}
+
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13px}
+.info-row .lbl{color:var(--muted)}
+.info-row .val{font-weight:600;color:var(--text)}
+.status-box{border-radius:8px;padding:10px 14px;text-align:center;margin:12px 0}
+.status-box.free    {background:#d5f5e3;color:#1a7a3f}
+.status-box.reserved{background:#fdebd0;color:#a04000}
+.status-box.sold    {background:#eaecee;color:#5d6d7e}
+.status-box .stxt{font-size:14px;font-weight:700}
+.mini-roi{background:var(--primary-pale);border:1px solid var(--primary);border-radius:10px;padding:14px;margin-top:12px;text-align:center}
+.mini-roi .r{font-size:28px;font-weight:800;color:var(--primary)}
+.mini-roi .rl{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px}
+.mini-roi .profit{font-size:15px;font-weight:700;color:var(--accent-h);margin-top:6px}
+.go-inv-btn{
+  width:100%;margin-top:14px;padding:10px;background:var(--primary);color:#fff;
+  border:none;border-radius:8px;cursor:pointer;font-weight:600;
+  font-family:'Inter',sans-serif;font-size:13px;transition:background .2s;
+}
+.go-inv-btn:hover{background:var(--primary-light)}
+
+/* ══════════════════════════════════════
+   PAGE 2 — INVENTORY
+══════════════════════════════════════ */
+#page-inv{overflow:hidden}
+.inv-wrapper{display:flex;flex:1;gap:0;overflow:hidden;height:100%}
+
+/* STATS BAR */
+.stats-bar{
+  display:flex;gap:0;border-bottom:1px solid var(--border);
+  background:var(--card);flex-shrink:0;flex-wrap:wrap;
+}
+.stat{
+  flex:1;min-width:130px;padding:12px 18px;border-right:1px solid var(--border);
+  text-align:center;
+}
+.stat .sv{font-size:22px;font-weight:700;color:var(--primary)}
+.stat.g .sv{color:#27ae60}.stat.o .sv{color:#e67e22}
+.stat.gr .sv{color:#7f8c8d}.stat.gd .sv{color:var(--accent-h)}
+.stat .sl{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:2px}
+
+/* LEFT PANEL — Table */
+.inv-left{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.inv-panel{background:var(--card);border-radius:0;box-shadow:none;flex:1;display:flex;flex-direction:column;overflow:hidden}
+.panel-header{
+  padding:12px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0;flex-wrap:wrap;
+}
+.panel-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--primary)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filter-select,.search-box{
+  font-family:'Inter',sans-serif;font-size:12px;
+  border:1px solid var(--border);border-radius:8px;
+  padding:6px 10px;background:var(--bg);color:var(--text);
+  cursor:pointer;outline:none;transition:border .2s;
+}
+.filter-select:focus,.search-box:focus{border-color:var(--primary)}
+.search-box{width:160px}
+.table-wrap{overflow:auto;flex:1}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{
+  background:var(--primary);color:#fff;padding:10px 12px;
+  text-align:left;font-weight:600;font-size:11px;
+  text-transform:uppercase;letter-spacing:.4px;
+  white-space:nowrap;cursor:pointer;user-select:none;position:sticky;top:0;z-index:5;
+}
+thead th:hover{background:var(--primary-light)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .15s;cursor:pointer}
+tbody tr:hover{background:var(--primary-pale)}
+tbody tr.sel{background:#ddeedd;border-left:3px solid var(--primary)}
+tbody td{padding:9px 12px;vertical-align:middle;white-space:nowrap}
+.badge{display:inline-block;padding:2px 9px;border-radius:14px;font-size:10px;font-weight:700}
+.badge-free    {background:#d5f5e3;color:#1a7a3f}
+.badge-reserved{background:#fdebd0;color:#a04000}
+.badge-sold    {background:#eaecee;color:#5d6d7e}
+.zpill{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700}
+.z-LA{background:#d6eaf8;color:#1a5276}.z-LB{background:#d5f5e3;color:#1a7a3f}
+.z-LC{background:#f9ebea;color:#922b21}.z-LD{background:#fef9e7;color:#9a7d0a}
+.z-AH{background:#f4ecf7;color:#6c3483}
+.pag{display:flex;gap:5px;justify-content:flex-end;padding:10px 16px;align-items:center;border-top:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+.pb{background:var(--card);border:1px solid var(--border);color:var(--text);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;font-family:'Inter',sans-serif;transition:all .2s}
+.pb:hover,.pb.act{background:var(--primary);color:#fff;border-color:var(--primary)}
+.pi{font-size:11px;color:var(--muted)}
+.empty{text-align:center;padding:40px;color:var(--muted)}
+
+/* RIGHT PANEL — Calculators */
+.inv-right{
+  width:300px;border-left:1px solid var(--border);background:var(--card);
+  display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;
+}
+.calc-section{padding:14px 16px;border-bottom:1px solid var(--border)}
+.calc-section h4{font-family:'Playfair Display',serif;font-size:14px;color:var(--primary);margin-bottom:10px}
+.sel-info{background:var(--primary-pale);border-radius:8px;padding:10px;margin-bottom:12px}
+.sel-id{font-weight:700;color:var(--primary);font-size:15px}
+.sel-type{font-size:11px;color:var(--muted);margin-top:2px}
+.fl{margin-bottom:10px}
+.fl label{display:block;font-size:10px;font-weight:600;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px}
+.ni{padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;width:100%;background:var(--bg);color:var(--text);outline:none;font-family:'Inter',sans-serif;transition:border .2s}
+.ni:focus{border-color:var(--primary)}
+.ni[readonly]{background:#f0f0ee;color:var(--muted)}
+.sr{display:flex;align-items:center;gap:8px}
+.sr input{flex:1;accent-color:var(--primary)}
+.slbl{font-size:13px;font-weight:700;color:var(--primary);min-width:36px;text-align:right}
+.res{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.rb{background:var(--primary);border-radius:9px;padding:12px 8px;color:#fff;text-align:center}
+.rb.gold{background:var(--accent-h)}
+.rl2{font-size:9px;opacity:.8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.rv{font-size:18px;font-weight:700}
+.comm-box{background:linear-gradient(135deg,#2c5f2e,#3d7a40);border-radius:9px;padding:14px;color:#fff;margin-top:8px}
+.comm-box .ct{font-size:10px;opacity:.8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.comm-box .cv{font-size:22px;font-weight:700;color:#a8d5aa}
+.comm-box .cs{font-size:11px;opacity:.75;margin-top:2px}
+.cr-row{display:flex;align-items:center;gap:7px;margin-top:8px}
+.cr-row label{font-size:11px;opacity:.85}
+.cr-row input{flex:1;accent-color:#a8d5aa}
+.crlbl{font-size:12px;font-weight:700;min-width:32px;text-align:right}
+.sheets-link-btn{
+  width:100%;padding:9px;background:var(--primary-pale);
+  border:1px solid var(--primary);border-radius:8px;cursor:pointer;
+  font-family:'Inter',sans-serif;color:var(--primary);font-weight:600;
+  font-size:12px;transition:all .2s;margin-top:6px;
+}
+.sheets-link-btn:hover{background:var(--primary);color:#fff}
+.src-info{font-size:11px;color:var(--muted);line-height:1.6;margin-top:6px}
+.src-info strong{color:var(--primary)}
+@media(max-width:1000px){
+  .inv-right{display:none}
+  .map-panel{width:260px}
+}
+@media(max-width:700px){
+  .nav-tab span{display:none}
+  #page-map{flex-direction:column}
+  .map-panel{width:100%;border-left:none;border-top:1px solid var(--border);height:40%;max-height:40%}
+  .inv-wrapper{flex-direction:column;overflow-y:auto;display:block}
+  .inv-left{height:450px;flex:none}
+  .inv-right{width:100%;border-left:none;border-top:1px solid var(--border);display:flex;flex:none}
+}
+@media(max-width:600px){
+  .topbar { padding: 0 6px; gap: 4px; }
+  .topbar-logo { font-size: 13px; }
+  .nav-tabs { gap: 2px; }
+  .nav-tab { padding: 6px 8px; font-size: 11px; }
+  .sync-badge span { display: none; }
+  .sync-badge { padding: 4px 6px; gap: 0; }
+  .lang-pill button { padding: 4px 6px; font-size: 10px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── TOPBAR ── -->
+<div class="topbar">
+  <div class="topbar-logo">GREEN <span>CANYON</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('map')" id="tab-map">🗺️ <span data-i18n="tab_map">ინტ. რუქა</span></button>
+    <button class="nav-tab" onclick="showPage('inv')" id="tab-inv">📊 <span data-i18n="tab_inv">ინვენტარი</span></button>
+  </div>
+  <div class="topbar-right">
+    <div class="sync-badge" onclick="manualRefresh()" id="sync-badge">
+      <div class="dot ok" id="sync-dot"></div>
+      <span id="sync-lbl" data-i18n="ready">მზადაა</span>
+    </div>
+    <div class="lang-pill">
+      <button class="active" onclick="setLang('ka')">ქართ</button>
+      <button onclick="setLang('en')">EN</button>
+      <button onclick="setLang('ru')">RU</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE 1: MAP ══ -->
+<div class="page active" id="page-map">
+  <div id="leaflet-map"></div>
+
+  <div class="map-legend" id="map-legend">
+    <h4 data-i18n="status_lbl">სტატუსი</h4>
+    <div class="leg-item"><div class="leg-dot" style="background:#27ae60"></div><span data-i18n="st_free_full">ხელმისაწვდომი</span> <span class="leg-count" id="lc-free">—</span></div>
+    <div class="leg-item"><div class="leg-dot" style="background:#e67e22"></div><span data-i18n="st_res_full">დაჯავშნილი</span> <span class="leg-count" id="lc-res">—</span></div>
+    <div class="leg-item"><div class="leg-dot" style="background:#7f8c8d"></div><span data-i18n="st_sold_full">გაყიდული</span> <span class="leg-count" id="lc-sold">—</span></div>
+    <hr class="leg-sep">
+    <div class="leg-item"><div class="leg-dot" style="background:#a24035;border-radius:2px"></div>LA — კანიონის პირი</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#4a8f4e;border-radius:2px"></div>LB — ველის კვარტალი</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#6e7160;border-radius:2px"></div>LC — ველის უბანი</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#a1b5a9;border-radius:2px"></div>LD — ხეობის ზოლი</div>
+  </div>
+
+  <div class="map-panel">
+    <div class="map-panel-header">
+      <h3>📍 ნაკვეთის ინფო</h3>
+      <p>დააჭირეთ ნებისმიერ მარკერს</p>
+    </div>
+    <div class="map-panel-body" id="map-panel-body">
+      <div class="map-no-sel">
+        <div class="icon">📍</div>
+        <p style="font-size:13px">რუქაზე ნებისმიერ მარკერს დააჭირეთ</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE 2: INVENTORY ══ -->
+<div class="page" id="page-inv">
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat"><div class="sl">სულ</div><div class="sv" id="st-total">—</div></div>
+    <div class="stat g"><div class="sl">ხელმისაწვდომი</div><div class="sv" id="st-free">—</div></div>
+    <div class="stat o"><div class="sl">დაჯავშნილი</div><div class="sv" id="st-res">—</div></div>
+    <div class="stat gr"><div class="sl">გაყიდული</div><div class="sv" id="st-sold">—</div></div>
+    <div class="stat gd"><div class="sl">პორტფელი</div><div class="sv" id="st-val">—</div></div>
+  </div>
+
+  <div class="inv-wrapper">
+    <!-- LEFT: TABLE -->
+    <div class="inv-left">
+      <div class="inv-panel">
+        <div class="panel-header">
+          <div class="panel-title">ინვენტარი</div>
+          <div class="filters">
+            <input type="text" class="search-box" id="s-q" placeholder="🔍 ID ან სტილი..." oninput="applyFilters()">
+            <select class="filter-select" id="s-zone" onchange="applyFilters()">
+              <option value="all" data-i18n="all_zones">ყველა ზონა</option>
+              <option value="LA">LA — კანიონის პირი</option>
+              <option value="LB">LB — ველის კვარტალი</option>
+              <option value="LC">LC — ველის უბანი</option>
+              <option value="LD">LD — ხეობის ზოლი</option>
+              <option value="AH">AH — Apart Hotel</option>
+            </select>
+            <select class="filter-select" id="s-status" onchange="applyFilters()">
+              <option value="all" data-i18n="all_stat">ყველა სტ.</option>
+              <option value="free" data-i18n="st_free">ხელმ.</option>
+              <option value="reserved" data-i18n="st_res">დაჯავ.</option>
+              <option value="sold" data-i18n="st_sold">გაყ.</option>
+            </select>
+            <select class="filter-select" id="s-type" onchange="applyFilters()">
+              <option value="all">ყველა ტიპი</option>
+              <option value="Modern Flat-Roof">Modern Flat-Roof</option>
+              <option value="Barnhouse">Barnhouse</option>
+              <option value="A-Frame">A-Frame</option>
+              <option value="Barn 55">Barn 55m²</option>
+              <option value="Barn 85">Barn 85m²</option>
+              <option value="Barn 115">Barn 115m²</option>
+              <option value="Studio 35m²">Studio 35m²</option>
+              <option value="Junior Suite 50m²">Junior Suite 50m²</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th onclick="sortT('id')">ID ↕</th>
+              <th>ზონა</th>
+              <th onclick="sortT('sqm')">სახლი ↕</th>
+              <th onclick="sortT('area')">ნაკვეთი ↕</th>
+              <th>ტიპი</th>
+              <th onclick="sortT('price')">ფასი ↕</th>
+              <th onclick="sortT('roi')">ROI ↕</th>
+              <th>სტ.</th>
+              <th>შენიშვ.</th>
+            </tr></thead>
+            <tbody id="inv-tbody"></tbody>
+          </table>
+        </div>
+        <div class="pag" id="pag"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: CALCULATORS -->
+    <div class="inv-right">
+      <!-- ROI Calculator -->
+      <div class="calc-section">
+        <h4>ROI კალკულატორი</h4>
+        <div class="sel-info">
+          <div class="sel-id" id="ci-id">← ნაკვეთი მოირჩიეთ</div>
+          <div class="sel-type" id="ci-type"></div>
+        </div>
+        <div class="fl">
+          <label>ჯამური ფასი (CAPEX)</label>
+          <div style="position:relative">
+            <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:#aaa;font-size:13px">$</span>
+            <input class="ni" type="number" id="c-capex" readonly style="padding-left:20px">
+          </div>
+        </div>
+        <div class="fl">
+          <label>დღიური ქირა ($)</label>
+          <input class="ni" type="number" id="c-rent" min="50" max="2000" oninput="recalc()">
+        </div>
+        <div class="fl">
+          <label>დატვირთულობა</label>
+          <div class="sr">
+            <input type="range" id="c-occ" min="20" max="85" value="45" oninput="recalc()">
+            <span class="slbl" id="occ-l">45%</span>
+          </div>
+        </div>
+        <div class="fl">
+          <label>მართვის საკ.</label>
+          <div class="sr">
+            <input type="range" id="c-mgmt" min="20" max="50" value="40" oninput="recalc()">
+            <span class="slbl" id="mgmt-l">40%</span>
+          </div>
+        </div>
+        <div class="res">
+          <div class="rb"><div class="rl2">წლ. შემ.</div><div class="rv" id="r-inc">$0</div></div>
+          <div class="rb gold"><div class="rl2">ROI %</div><div class="rv" id="r-roi">0%</div></div>
+          <div class="rb" style="background:#1a4a1c"><div class="rl2">უკუγება</div><div class="rv" id="r-pb">0წ</div></div>
+          <div class="rb" style="background:#5c4000"><div class="rl2">ბრუტო</div><div class="rv" id="r-gr">$0</div></div>
+        </div>
+      </div>
+
+      <!-- Commission -->
+      <div class="calc-section">
+        <h4>კომისია</h4>
+        <div class="comm-box">
+          <div class="ct">შენი კომისია</div>
+          <div class="cv" id="comm-v">$0</div>
+          <div class="cs" id="comm-d">— ობიექტი მოირჩიეთ —</div>
+          <div class="cr-row">
+            <label>კომ. %:</label>
+            <input type="range" id="comm-r" min="1" max="6" value="3" step=".5" oninput="recalc()">
+            <span class="crlbl" id="comm-rl">3%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Source -->
+      <div class="calc-section">
+        <h4>📡 მონაცემთა წყარო</h4>
+        <div class="src-info" id="src-info">
+          <strong>წყარო:</strong> ჩაშენებული<br>
+          <strong>განახ.:</strong> <span id="last-sync">—</span><br>
+          <strong>ობიექტი:</strong> 271
+        </div>
+        <button class="sheets-link-btn" onclick="openSheetsModal()">
+          📊 Google Sheets კავშირი
+        </button>
+        <button class="sheets-link-btn" onclick="manualRefresh()" style="margin-top:6px">
+          🔄 ახლავე განახლება
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SHEETS SETUP MODAL -->
+<div id="sheets-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:3000;align-items:center;justify-content:center">
+  <div style="background:white;border-radius:16px;padding:28px;max-width:520px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <h2 style="font-family:'Playfair Display',serif;color:var(--primary);margin-bottom:8px">📊 Google Sheets კავშირი</h2>
+    <p style="color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:16px">
+      Google Sheets-ში სტატუსის შეცვლა ავტომატურად განახლდება Dashboard-ზე.
+    </p>
+    <div style="background:#f8f7f4;border-radius:10px;padding:16px;margin-bottom:16px;font-size:13px">
+      <strong style="color:var(--primary)">ნაბიჯები:</strong><br><br>
+      1️⃣ <a href="#" onclick="return false" style="color:var(--primary)">green_canyon_inventory.csv</a> Google Sheets-ში ატვირთეთ<br>
+      2️⃣ <strong>File → Share → Publish to web → Sheet1 → CSV → Publish</strong><br>
+      3️⃣ URL ჩასვით ქვევით
+    </div>
+    <div style="display:flex;gap:8px">
+      <input type="text" id="sheets-url" placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv"
+        style="flex:1;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:'Inter',sans-serif;outline:none">
+      <button onclick="connectSheets()" style="background:var(--primary);color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700;font-family:'Inter',sans-serif">
+        🔗 კავშირი
+      </button>
+    </div>
+    <button onclick="closeSheetsModal()" style="margin-top:12px;width:100%;background:none;border:1px solid var(--border);border-radius:8px;padding:9px;cursor:pointer;color:var(--muted);font-family:'Inter',sans-serif">
+      დახურვა
+    </button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// EMBEDDED DATA — from Settlement Excel
+// ═══════════════════════════════════════
+const INVENTORY = [
+  {id:'LA-1',zone:'LA',area:702.4,sqm:145.0,style:'Modern Flat-Roof',land_price:120.0,build_cost:1800,daily_rent:400.0,roi_file:11.4,ah_price:null,status:'free',notes:'',latlng:[1763.58,128.48]},
+  {id:'LA-3',zone:'LA',area:683.2,sqm:145.0,style:'Modern Flat-Roof',land_price:120.0,build_cost:1800,daily_rent:400.0,roi_file:11.5,ah_price:null,status:'free',notes:'',latlng:[1720.6,118.49]},
+  {id:'LA-5',zone:'LA',area:652.7,sqm:145.0,style:'Modern Flat-Roof',land_price:120.0,build_cost:1800,daily_rent:400.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[1672.46,112.42]},
+  {id:'LA-7',zone:'LA',area:558.9,sqm:115.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:300.0,roi_file:10.8,ah_price:null,status:'free',notes:'',latlng:[1622.96,111.69]},
+  {id:'LA-9',zone:'LA',area:561.5,sqm:115.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:300.0,roi_file:10.8,ah_price:null,status:'free',notes:'',latlng:[1571.92,120.56]},
+  {id:'LA-11',zone:'LA',area:740.3,sqm:145.0,style:'Modern Flat-Roof',land_price:120.0,build_cost:1800,daily_rent:400.0,roi_file:11.3,ah_price:null,status:'free',notes:'',latlng:[1522.28,129.01]},
+  {id:'LA-13',zone:'LA',area:953.6,sqm:145.0,style:'Modern Flat-Roof',land_price:120.0,build_cost:1800,daily_rent:400.0,roi_file:10.5,ah_price:null,status:'free',notes:'',latlng:[1471.31,139.54]},
+  {id:'LA-15',zone:'LA',area:1084.1,sqm:145.0,style:'Modern Flat-Roof',land_price:120.0,build_cost:1800,daily_rent:400.0,roi_file:10.1,ah_price:null,status:'free',notes:'',latlng:[1425.28,161.18]},
+  {id:'LA-17',zone:'LA',area:503.7,sqm:115.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:300.0,roi_file:11.1,ah_price:null,status:'free',notes:'',latlng:[1273.37,441.12]},
+  {id:'LA-19',zone:'LA',area:413.4,sqm:85.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:250.0,roi_file:12.2,ah_price:null,status:'free',notes:'',latlng:[1268.43,478.57]},
+  {id:'LA-21',zone:'LA',area:393.0,sqm:85.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:250.0,roi_file:12.3,ah_price:null,status:'free',notes:'',latlng:[1263.61,516.84]},
+  {id:'LA-23',zone:'LA',area:404.7,sqm:85.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:250.0,roi_file:12.2,ah_price:null,status:'free',notes:'',latlng:[1255.43,557.26]},
+  {id:'LA-25',zone:'LA',area:485.3,sqm:115.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:300.0,roi_file:11.1,ah_price:null,status:'free',notes:'',latlng:[1251.29,600.26]},
+  {id:'LA-27',zone:'LA',area:479.7,sqm:115.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:300.0,roi_file:11.2,ah_price:null,status:'free',notes:'',latlng:[1247.84,645.54]},
+  {id:'LA-29',zone:'LA',area:652.9,sqm:145.0,style:'Modern Flat-Roof',land_price:120.0,build_cost:1800,daily_rent:400.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[1238.72,683.0]},
+  {id:'LA-31',zone:'LA',area:513.9,sqm:115.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:300.0,roi_file:11.0,ah_price:null,status:'free',notes:'',latlng:[1219.25,711.7]},
+  {id:'LA-33',zone:'LA',area:451.8,sqm:115.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:300.0,roi_file:11.3,ah_price:null,status:'free',notes:'',latlng:[1197.81,735.18]},
+  {id:'LA-35',zone:'LA',area:509.0,sqm:115.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:300.0,roi_file:11.0,ah_price:null,status:'free',notes:'',latlng:[1177.24,757.8]},
+  {id:'LA-37',zone:'LA',area:464.4,sqm:115.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:300.0,roi_file:11.3,ah_price:null,status:'free',notes:'',latlng:[1158.87,782.68]},
+  {id:'LA-39',zone:'LA',area:425.4,sqm:85.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:250.0,roi_file:12.1,ah_price:null,status:'free',notes:'',latlng:[1139.89,812.3]},
+  {id:'LA-41',zone:'LA',area:309.0,sqm:55.0,style:'A-Frame',land_price:120.0,build_cost:1800,daily_rent:200.0,roi_file:14.5,ah_price:null,status:'free',notes:'',latlng:[1120.06,844.65]},
+  {id:'LA-43',zone:'LA',area:470.5,sqm:115.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:300.0,roi_file:11.2,ah_price:null,status:'free',notes:'',latlng:[1080.43,862.94]},
+  {id:'LA-45',zone:'LA',area:628.6,sqm:115.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:300.0,roi_file:10.5,ah_price:null,status:'free',notes:'',latlng:[1050.55,871.48]},
+  {id:'LA-47',zone:'LA',area:652.1,sqm:145.0,style:'Modern Flat-Roof',land_price:120.0,build_cost:1800,daily_rent:400.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[1023.11,883.97]},
+  {id:'LA-49',zone:'LA',area:584.2,sqm:115.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:300.0,roi_file:10.7,ah_price:null,status:'free',notes:'',latlng:[998.88,902.65]},
+  {id:'LA-51',zone:'LA',area:443.3,sqm:85.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:250.0,roi_file:11.9,ah_price:null,status:'free',notes:'',latlng:[976.99,926.68]},
+  {id:'LA-53',zone:'LA',area:348.6,sqm:55.0,style:'A-Frame',land_price:120.0,build_cost:1800,daily_rent:200.0,roi_file:14.0,ah_price:null,status:'free',notes:'',latlng:[949.25,954.58]},
+  {id:'LA-55',zone:'LA',area:298.0,sqm:55.0,style:'A-Frame',land_price:120.0,build_cost:1800,daily_rent:200.0,roi_file:14.6,ah_price:null,status:'free',notes:'',latlng:[921.85,971.35]},
+  {id:'LA-57',zone:'LA',area:366.0,sqm:85.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:250.0,roi_file:12.5,ah_price:null,status:'free',notes:'',latlng:[891.45,987.33]},
+  {id:'LA-59',zone:'LA',area:369.6,sqm:85.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:250.0,roi_file:12.5,ah_price:null,status:'free',notes:'',latlng:[862.74,1005.27]},
+  {id:'LA-61',zone:'LA',area:385.3,sqm:85.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:250.0,roi_file:12.4,ah_price:null,status:'free',notes:'',latlng:[833.44,1021.85]},
+  {id:'LA-63',zone:'LA',area:381.8,sqm:85.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:250.0,roi_file:12.4,ah_price:null,status:'free',notes:'',latlng:[806.19,1037.42]},
+  {id:'LA-65',zone:'LA',area:336.7,sqm:55.0,style:'A-Frame',land_price:120.0,build_cost:1800,daily_rent:200.0,roi_file:14.1,ah_price:null,status:'free',notes:'',latlng:[778.96,1056.43]},
+  {id:'LA-67',zone:'LA',area:360.1,sqm:85.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:250.0,roi_file:12.6,ah_price:null,status:'free',notes:'',latlng:[748.68,1075.46]},
+  {id:'LA-69',zone:'LA',area:325.3,sqm:55.0,style:'A-Frame',land_price:120.0,build_cost:1800,daily_rent:200.0,roi_file:14.3,ah_price:null,status:'free',notes:'',latlng:[719.13,1090.48]},
+  {id:'LA-71',zone:'LA',area:335.4,sqm:55.0,style:'A-Frame',land_price:120.0,build_cost:1800,daily_rent:200.0,roi_file:14.2,ah_price:null,status:'free',notes:'',latlng:[694.85,1107.74]},
+  {id:'LA-73',zone:'LA',area:293.0,sqm:55.0,style:'A-Frame',land_price:120.0,build_cost:1800,daily_rent:200.0,roi_file:14.7,ah_price:null,status:'free',notes:'',latlng:[667.43,1128.53]},
+  {id:'LA-75',zone:'LA',area:334.3,sqm:55.0,style:'A-Frame',land_price:120.0,build_cost:1800,daily_rent:200.0,roi_file:14.2,ah_price:null,status:'free',notes:'',latlng:[641.31,1155.43]},
+  {id:'LA-77',zone:'LA',area:433.6,sqm:85.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:250.0,roi_file:12.0,ah_price:null,status:'free',notes:'',latlng:[592.17,1211.93]},
+  {id:'LA-79',zone:'LA',area:441.0,sqm:85.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:250.0,roi_file:12.0,ah_price:null,status:'free',notes:'',latlng:[553.34,1245.64]},
+  {id:'LA-81',zone:'LA',area:476.4,sqm:115.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:300.0,roi_file:11.2,ah_price:null,status:'free',notes:'',latlng:[530.61,1272.92]},
+  {id:'LA-83',zone:'LA',area:353.5,sqm:85.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:250.0,roi_file:12.6,ah_price:null,status:'free',notes:'',latlng:[510.65,1303.66]},
+  {id:'LA-85',zone:'LA',area:626.5,sqm:115.0,style:'Barnhouse',land_price:120.0,build_cost:1800,daily_rent:300.0,roi_file:10.5,ah_price:null,status:'free',notes:'',latlng:[475.95,1346.8]},
+  {id:'LA-87',zone:'LA',area:721.9,sqm:145.0,style:'Modern Flat-Roof',land_price:120.0,build_cost:1800,daily_rent:400.0,roi_file:11.3,ah_price:null,status:'free',notes:'',latlng:[438.1,1392.02]},
+  {id:'LA-89',zone:'LA',area:789.1,sqm:145.0,style:'Modern Flat-Roof',land_price:120.0,build_cost:1800,daily_rent:400.0,roi_file:11.1,ah_price:null,status:'free',notes:'',latlng:[395.14,1438.26]},
+  {id:'LA-91',zone:'LA',area:918.3,sqm:145.0,style:'Modern Flat-Roof',land_price:120.0,build_cost:1800,daily_rent:400.0,roi_file:10.6,ah_price:null,status:'free',notes:'',latlng:[350.63,1464.52]},
+  {id:'LA-93',zone:'LA',area:744.7,sqm:145.0,style:'Modern Flat-Roof',land_price:120.0,build_cost:1800,daily_rent:400.0,roi_file:11.3,ah_price:null,status:'free',notes:'',latlng:[310.45,1461.64]},
+  {id:'LA-95',zone:'LA',area:751.9,sqm:145.0,style:'Modern Flat-Roof',land_price:120.0,build_cost:1800,daily_rent:400.0,roi_file:11.2,ah_price:null,status:'free',notes:'',latlng:[268.16,1470.91]},
+  {id:'LA-2',zone:'LA',area:654.9,sqm:145.0,style:'Barnhouse',land_price:100.0,build_cost:1348,daily_rent:300.0,roi_file:11.3,ah_price:null,status:'free',notes:'',latlng:[1701.3,193.93]},
+  {id:'LA-4',zone:'LA',area:392.4,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1338,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[1641.9,190.41]},
+  {id:'LA-6',zone:'LA',area:491.7,sqm:115.0,style:'Barn 115',land_price:100.0,build_cost:1372,daily_rent:250.0,roi_file:11.9,ah_price:null,status:'free',notes:'',latlng:[1608.32,198.74]},
+  {id:'LA-8',zone:'LA',area:557.8,sqm:115.0,style:'Barn 115',land_price:100.0,build_cost:1315,daily_rent:250.0,roi_file:11.9,ah_price:null,status:'free',notes:'',latlng:[1576.07,209.16]},
+  {id:'LA-10',zone:'LA',area:591.5,sqm:115.0,style:'Barn 115',land_price:100.0,build_cost:1286,daily_rent:250.0,roi_file:11.9,ah_price:null,status:'free',notes:'',latlng:[1545.45,223.44]},
+  {id:'LA-12',zone:'LA',area:608.4,sqm:115.0,style:'Barn 115',land_price:100.0,build_cost:1271,daily_rent:250.0,roi_file:11.9,ah_price:null,status:'free',notes:'',latlng:[1516.5,240.37]},
+  {id:'LA-14',zone:'LA',area:609.8,sqm:115.0,style:'Barn 115',land_price:100.0,build_cost:1270,daily_rent:250.0,roi_file:11.9,ah_price:null,status:'free',notes:'',latlng:[1491.08,259.55]},
+  {id:'LA-16',zone:'LA',area:580.2,sqm:115.0,style:'Barn 115',land_price:100.0,build_cost:1295,daily_rent:250.0,roi_file:11.9,ah_price:null,status:'free',notes:'',latlng:[1466.62,280.89]},
+  {id:'LA-18',zone:'LA',area:567.2,sqm:115.0,style:'Barn 115',land_price:100.0,build_cost:1307,daily_rent:250.0,roi_file:11.9,ah_price:null,status:'free',notes:'',latlng:[1425.28,330.56]},
+  {id:'LA-20',zone:'LA',area:548.0,sqm:115.0,style:'Barn 115',land_price:100.0,build_cost:1323,daily_rent:250.0,roi_file:11.9,ah_price:null,status:'free',notes:'',latlng:[1405.27,358.18]},
+  {id:'LA-22',zone:'LA',area:511.9,sqm:115.0,style:'Barn 115',land_price:100.0,build_cost:1355,daily_rent:250.0,roi_file:11.9,ah_price:null,status:'free',notes:'',latlng:[1386.03,386.76]},
+  {id:'LA-24',zone:'LA',area:457.2,sqm:115.0,style:'Barn 115',land_price:100.0,build_cost:1402,daily_rent:250.0,roi_file:11.9,ah_price:null,status:'free',notes:'',latlng:[1367.66,416.38]},
+  {id:'LA-26',zone:'LA',area:381.9,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1351,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[1350.25,447.15]},
+  {id:'LA-28',zone:'LA',area:283.2,sqm:55.0,style:'Barn 55',land_price:100.0,build_cost:1285,daily_rent:150.0,roi_file:14.9,ah_price:null,status:'free',notes:'',latlng:[1333.95,479.21]},
+  {id:'LA-30',zone:'LA',area:504.5,sqm:115.0,style:'Barn 115',land_price:100.0,build_cost:1361,daily_rent:250.0,roi_file:11.9,ah_price:null,status:'free',notes:'',latlng:[1318.21,543.67]},
+  {id:'LA-32',zone:'LA',area:643.2,sqm:115.0,style:'Barn 115',land_price:100.0,build_cost:1241,daily_rent:250.0,roi_file:11.9,ah_price:null,status:'free',notes:'',latlng:[1338.89,633.84]},
+  {id:'LA-34',zone:'LA',area:538.8,sqm:115.0,style:'Barn 115',land_price:100.0,build_cost:1331,daily_rent:250.0,roi_file:11.9,ah_price:null,status:'free',notes:'',latlng:[1325.66,671.49]},
+  {id:'LA-36',zone:'LA',area:376.0,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1358,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[1319.06,714.14]},
+  {id:'LA-38',zone:'LA',area:359.3,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1377,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[1302.1,744.35]},
+  {id:'LA-40',zone:'LA',area:382.6,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1350,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[1281.39,771.22]},
+  {id:'LA-42',zone:'LA',area:402.0,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1327,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[1260.12,796.27]},
+  {id:'LA-44',zone:'LA',area:409.7,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1318,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[1238.4,820.56]},
+  {id:'LA-46',zone:'LA',area:406.0,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1322,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[1215.84,844.48]},
+  {id:'LA-48',zone:'LA',area:406.3,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1322,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[1192.9,869.16]},
+  {id:'LA-50',zone:'LA',area:600.7,sqm:115.0,style:'Barn 115',land_price:100.0,build_cost:1278,daily_rent:250.0,roi_file:11.9,ah_price:null,status:'free',notes:'',latlng:[1166.91,899.91]},
+  {id:'LA-52',zone:'LA',area:433.3,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1290,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[1130.61,934.01]},
+  {id:'LA-54',zone:'LA',area:426.8,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1298,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[1102.2,952.86]},
+  {id:'LA-56',zone:'LA',area:426.8,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1298,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[1073.8,969.93]},
+  {id:'LA-58',zone:'LA',area:426.8,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1298,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[1045.39,987.0]},
+  {id:'LA-60',zone:'LA',area:426.8,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1298,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[1016.98,1004.07]},
+  {id:'LA-62',zone:'LA',area:426.8,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1298,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[988.57,1021.14]},
+  {id:'LA-64',zone:'LA',area:426.8,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1298,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[931.75,1055.28]},
+  {id:'LA-66',zone:'LA',area:426.8,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1298,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[903.34,1072.35]},
+  {id:'LA-68',zone:'LA',area:426.8,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1298,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[874.93,1089.42]},
+  {id:'LA-70',zone:'LA',area:426.8,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1298,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[846.53,1106.49]},
+  {id:'LA-72',zone:'LA',area:426.8,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1298,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[818.12,1123.56]},
+  {id:'LA-74',zone:'LA',area:412.6,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1315,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[791.14,1140.66]},
+  {id:'LA-76',zone:'LA',area:539.7,sqm:115.0,style:'Barn 115',land_price:100.0,build_cost:1331,daily_rent:250.0,roi_file:11.9,ah_price:null,status:'free',notes:'',latlng:[756.45,1170.46]},
+  {id:'LA-78',zone:'LA',area:612.6,sqm:115.0,style:'Barn 115',land_price:100.0,build_cost:1267,daily_rent:250.0,roi_file:11.9,ah_price:null,status:'free',notes:'',latlng:[665.88,1210.95]},
+  {id:'LA-80',zone:'LA',area:422.6,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1303,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[646.35,1250.81]},
+  {id:'LA-82',zone:'LA',area:487.1,sqm:115.0,style:'Barn 115',land_price:100.0,build_cost:1376,daily_rent:250.0,roi_file:11.9,ah_price:null,status:'free',notes:'',latlng:[629.52,1279.77]},
+  {id:'LA-84',zone:'LA',area:436.5,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1286,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[543.91,1366.12]},
+  {id:'LA-86',zone:'LA',area:646.3,sqm:115.0,style:'Barn 115',land_price:100.0,build_cost:1238,daily_rent:250.0,roi_file:11.9,ah_price:null,status:'free',notes:'',latlng:[531.4,1400.48]},
+  {id:'LA-88',zone:'LA',area:400.2,sqm:85.0,style:'Barn 85',land_price:100.0,build_cost:1329,daily_rent:180.0,roi_file:11.6,ah_price:null,status:'free',notes:'',latlng:[471.54,1452.82]},
+  {id:'LB-1',zone:'LB',area:384.0,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.7,ah_price:null,status:'free',notes:'',latlng:[1675.84,236.37]},
+  {id:'LB-3',zone:'LB',area:509.5,sqm:115.0,style:'Barn 115',land_price:80.0,build_cost:1800,daily_rent:250.0,roi_file:9.9,ah_price:null,status:'free',notes:'',latlng:[1651.38,258.96]},
+  {id:'LB-5',zone:'LB',area:599.2,sqm:115.0,style:'Barn 115',land_price:80.0,build_cost:1800,daily_rent:250.0,roi_file:9.7,ah_price:null,status:'free',notes:'',latlng:[1626.91,275.7]},
+  {id:'LB-7',zone:'LB',area:565.3,sqm:115.0,style:'Barn 115',land_price:80.0,build_cost:1800,daily_rent:250.0,roi_file:9.8,ah_price:null,status:'free',notes:'',latlng:[1598.03,287.21]},
+  {id:'LB-9',zone:'LB',area:491.1,sqm:115.0,style:'Barn 115',land_price:80.0,build_cost:1800,daily_rent:250.0,roi_file:10.0,ah_price:null,status:'free',notes:'',latlng:[1567.17,300.89]},
+  {id:'LB-11',zone:'LB',area:466.5,sqm:115.0,style:'Barn 115',land_price:80.0,build_cost:1800,daily_rent:250.0,roi_file:10.1,ah_price:null,status:'free',notes:'',latlng:[1537.92,324.46]},
+  {id:'LB-13',zone:'LB',area:522.9,sqm:115.0,style:'Barn 115',land_price:80.0,build_cost:1800,daily_rent:250.0,roi_file:9.9,ah_price:null,status:'free',notes:'',latlng:[1512.63,349.46]},
+  {id:'LB-15',zone:'LB',area:582.2,sqm:115.0,style:'Barn 115',land_price:80.0,build_cost:1800,daily_rent:250.0,roi_file:9.7,ah_price:null,status:'free',notes:'',latlng:[1475.32,398.59]},
+  {id:'LB-17',zone:'LB',area:557.3,sqm:115.0,style:'Barn 115',land_price:80.0,build_cost:1800,daily_rent:250.0,roi_file:9.8,ah_price:null,status:'free',notes:'',latlng:[1454.37,422.48]},
+  {id:'LB-19',zone:'LB',area:498.4,sqm:115.0,style:'Barn 115',land_price:80.0,build_cost:1800,daily_rent:250.0,roi_file:10.0,ah_price:null,status:'free',notes:'',latlng:[1430.85,445.89]},
+  {id:'LB-21',zone:'LB',area:438.1,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.5,ah_price:null,status:'free',notes:'',latlng:[1406.97,469.29]},
+  {id:'LB-23',zone:'LB',area:377.7,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.8,ah_price:null,status:'free',notes:'',latlng:[1383.08,492.69]},
+  {id:'LB-25',zone:'LB',area:317.4,sqm:55.0,style:'A-Frame',land_price:80.0,build_cost:1800,daily_rent:150.0,roi_file:11.9,ah_price:null,status:'free',notes:'',latlng:[1359.2,516.1]},
+  {id:'LC-1',zone:'LC',area:491.0,sqm:115.0,style:'Barn 115',land_price:80.0,build_cost:1800,daily_rent:250.0,roi_file:10.0,ah_price:null,status:'free',notes:'',latlng:[1562.71,485.96]},
+  {id:'LC-3',zone:'LC',area:525.7,sqm:115.0,style:'Barn 115',land_price:80.0,build_cost:1800,daily_rent:250.0,roi_file:9.9,ah_price:null,status:'free',notes:'',latlng:[1561.84,521.43]},
+  {id:'LC-5',zone:'LC',area:570.0,sqm:115.0,style:'Barn 115',land_price:80.0,build_cost:1800,daily_rent:250.0,roi_file:9.8,ah_price:null,status:'free',notes:'',latlng:[1562.67,566.9]},
+  {id:'LC-7',zone:'LC',area:570.0,sqm:115.0,style:'Barn 115',land_price:80.0,build_cost:1800,daily_rent:250.0,roi_file:9.8,ah_price:null,status:'free',notes:'',latlng:[1561.68,611.08]},
+  {id:'LC-9',zone:'LC',area:741.9,sqm:145.0,style:'Barnhouse',land_price:80.0,build_cost:1800,daily_rent:300.0,roi_file:9.2,ah_price:null,status:'free',notes:'',latlng:[1561.68,655.29]},
+  {id:'LC-11',zone:'LC',area:789.9,sqm:145.0,style:'Barnhouse',land_price:80.0,build_cost:1800,daily_rent:300.0,roi_file:9.1,ah_price:null,status:'free',notes:'',latlng:[1277.15,904.59]},
+  {id:'LC-13',zone:'LC',area:509.8,sqm:115.0,style:'Barn 115',land_price:80.0,build_cost:1800,daily_rent:250.0,roi_file:9.9,ah_price:null,status:'free',notes:'',latlng:[1246.14,931.4]},
+  {id:'LC-15',zone:'LC',area:454.3,sqm:115.0,style:'Barn 115',land_price:80.0,build_cost:1800,daily_rent:250.0,roi_file:10.1,ah_price:null,status:'free',notes:'',latlng:[1219.81,952.01]},
+  {id:'LC-17',zone:'LC',area:369.9,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.8,ah_price:null,status:'free',notes:'',latlng:[1193.3,971.41]},
+  {id:'LC-19',zone:'LC',area:426.8,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.5,ah_price:null,status:'free',notes:'',latlng:[1162.99,989.61]},
+  {id:'LC-21',zone:'LC',area:426.8,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.5,ah_price:null,status:'free',notes:'',latlng:[1134.58,1006.68]},
+  {id:'LC-23',zone:'LC',area:426.8,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.5,ah_price:null,status:'free',notes:'',latlng:[1106.18,1023.75]},
+  {id:'LC-25',zone:'LC',area:426.8,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.5,ah_price:null,status:'free',notes:'',latlng:[1077.77,1040.82]},
+  {id:'LC-27',zone:'LC',area:426.8,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.5,ah_price:null,status:'free',notes:'',latlng:[1049.36,1057.89]},
+  {id:'LC-29',zone:'LC',area:426.8,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.5,ah_price:null,status:'free',notes:'',latlng:[1020.95,1074.96]},
+  {id:'LC-31',zone:'LC',area:426.8,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.5,ah_price:null,status:'free',notes:'',latlng:[964.13,1109.1]},
+  {id:'LC-33',zone:'LC',area:426.8,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.5,ah_price:null,status:'free',notes:'',latlng:[935.72,1126.17]},
+  {id:'LC-35',zone:'LC',area:426.8,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.5,ah_price:null,status:'free',notes:'',latlng:[907.31,1143.24]},
+  {id:'LC-37',zone:'LC',area:426.8,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.5,ah_price:null,status:'free',notes:'',latlng:[878.91,1160.31]},
+  {id:'LC-39',zone:'LC',area:428.7,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.5,ah_price:null,status:'free',notes:'',latlng:[850.5,1178.29]},
+  {id:'LC-41',zone:'LC',area:467.1,sqm:115.0,style:'Barn 115',land_price:80.0,build_cost:1800,daily_rent:250.0,roi_file:10.1,ah_price:null,status:'free',notes:'',latlng:[822.63,1196.68]},
+  {id:'LC-43',zone:'LC',area:420.0,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.6,ah_price:null,status:'free',notes:'',latlng:[806.73,1242.27]},
+  {id:'LC-45',zone:'LC',area:420.0,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.6,ah_price:null,status:'free',notes:'',latlng:[794.31,1273.0]},
+  {id:'LC-47',zone:'LC',area:420.0,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.6,ah_price:null,status:'free',notes:'',latlng:[781.89,1303.72]},
+  {id:'LC-49',zone:'LC',area:420.0,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.6,ah_price:null,status:'free',notes:'',latlng:[769.48,1334.45]},
+  {id:'LC-51',zone:'LC',area:394.1,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.7,ah_price:null,status:'free',notes:'',latlng:[760.6,1365.18]},
+  {id:'LC-53',zone:'LC',area:342.3,sqm:55.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:150.0,roi_file:11.7,ah_price:null,status:'free',notes:'',latlng:[751.72,1397.34]},
+  {id:'LC-55',zone:'LC',area:388.7,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.7,ah_price:null,status:'free',notes:'',latlng:[741.25,1432.75]},
+  {id:'LC-57',zone:'LC',area:413.0,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.6,ah_price:null,status:'free',notes:'',latlng:[639.37,1437.56]},
+  {id:'LC-59',zone:'LC',area:419.3,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.6,ah_price:null,status:'free',notes:'',latlng:[605.65,1441.73]},
+  {id:'LC-61',zone:'LC',area:426.2,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.5,ah_price:null,status:'free',notes:'',latlng:[572.73,1445.01]},
+  {id:'LC-63',zone:'LC',area:427.8,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.5,ah_price:null,status:'free',notes:'',latlng:[539.75,1447.4]},
+  {id:'LC-65',zone:'LC',area:415.7,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1800,daily_rent:200.0,roi_file:10.6,ah_price:null,status:'free',notes:'',latlng:[506.69,1449.77]},
+  {id:'LD-1',zone:'LD',area:474.0,sqm:115.0,style:'Barn 115',land_price:100.0,build_cost:1800,daily_rent:250.0,roi_file:9.7,ah_price:null,status:'free',notes:'',latlng:[616.97,1357.41]},
+  {id:'LD-3',zone:'LD',area:474.0,sqm:115.0,style:'Barn 115',land_price:100.0,build_cost:1800,daily_rent:250.0,roi_file:9.7,ah_price:null,status:'free',notes:'',latlng:[619.85,1390.43]},
+  {id:'LB-2',zone:'LB',area:649.3,sqm:115.0,style:'Barn 115',land_price:60.0,build_cost:1750,daily_rent:250.0,roi_file:10.3,ah_price:null,status:'free',notes:'',latlng:[1627.72,374.37]},
+  {id:'LB-4',zone:'LB',area:901.9,sqm:145.0,style:'Barnhouse',land_price:60.0,build_cost:1750,daily_rent:300.0,roi_file:9.6,ah_price:null,status:'free',notes:'',latlng:[1578.01,401.23]},
+  {id:'LB-6',zone:'LB',area:514.2,sqm:115.0,style:'Barn 115',land_price:60.0,build_cost:1750,daily_rent:250.0,roi_file:10.6,ah_price:null,status:'free',notes:'',latlng:[1508.4,477.76]},
+  {id:'LB-8',zone:'LB',area:337.5,sqm:55.0,style:'Barn 55',land_price:60.0,build_cost:1750,daily_rent:150.0,roi_file:12.7,ah_price:null,status:'free',notes:'',latlng:[1473.48,515.38]},
+  {id:'LB-10',zone:'LB',area:396.9,sqm:85.0,style:'Barn 85',land_price:60.0,build_cost:1750,daily_rent:200.0,roi_file:11.4,ah_price:null,status:'free',notes:'',latlng:[1449.36,540.78]},
+  {id:'LB-12',zone:'LB',area:417.9,sqm:85.0,style:'Barn 85',land_price:60.0,build_cost:1750,daily_rent:200.0,roi_file:11.3,ah_price:null,status:'free',notes:'',latlng:[1424.95,559.83]},
+  {id:'LB-14',zone:'LB',area:412.8,sqm:85.0,style:'Barn 85',land_price:60.0,build_cost:1750,daily_rent:200.0,roi_file:11.4,ah_price:null,status:'free',notes:'',latlng:[1397.79,579.95]},
+  {id:'LB-16',zone:'LB',area:590.5,sqm:115.0,style:'Barn 115',land_price:60.0,build_cost:1750,daily_rent:250.0,roi_file:10.4,ah_price:null,status:'free',notes:'',latlng:[1364.38,605.11]},
+  {id:'LC-2',zone:'LC',area:558.5,sqm:115.0,style:'Barn 115',land_price:60.0,build_cost:1750,daily_rent:250.0,roi_file:10.5,ah_price:null,status:'free',notes:'',latlng:[1323.92,986.5]},
+  {id:'LC-4',zone:'LC',area:408.2,sqm:85.0,style:'Barn 85',land_price:60.0,build_cost:1750,daily_rent:200.0,roi_file:11.4,ah_price:null,status:'free',notes:'',latlng:[1290.31,1005.83]},
+  {id:'LC-6',zone:'LC',area:399.0,sqm:85.0,style:'Barn 85',land_price:60.0,build_cost:1750,daily_rent:200.0,roi_file:11.4,ah_price:null,status:'free',notes:'',latlng:[1261.55,1022.32]},
+  {id:'LC-8',zone:'LC',area:389.8,sqm:85.0,style:'Barn 85',land_price:60.0,build_cost:1750,daily_rent:200.0,roi_file:11.5,ah_price:null,status:'free',notes:'',latlng:[1232.79,1038.81]},
+  {id:'LC-10',zone:'LC',area:380.5,sqm:85.0,style:'Barn 85',land_price:60.0,build_cost:1750,daily_rent:200.0,roi_file:11.5,ah_price:null,status:'free',notes:'',latlng:[1204.03,1057.34]},
+  {id:'LC-12',zone:'LC',area:372.3,sqm:85.0,style:'Barn 85',land_price:60.0,build_cost:1750,daily_rent:200.0,roi_file:11.5,ah_price:null,status:'free',notes:'',latlng:[1175.28,1074.09]},
+  {id:'LC-14',zone:'LC',area:370.5,sqm:85.0,style:'Barn 85',land_price:60.0,build_cost:1750,daily_rent:200.0,roi_file:11.5,ah_price:null,status:'free',notes:'',latlng:[1146.67,1091.11]},
+  {id:'LC-16',zone:'LC',area:369.8,sqm:85.0,style:'Barn 85',land_price:60.0,build_cost:1750,daily_rent:200.0,roi_file:11.5,ah_price:null,status:'free',notes:'',latlng:[1118.24,1108.13]},
+  {id:'LC-18',zone:'LC',area:369.1,sqm:85.0,style:'Barn 85',land_price:60.0,build_cost:1750,daily_rent:200.0,roi_file:11.5,ah_price:null,status:'free',notes:'',latlng:[1089.8,1125.16]},
+  {id:'LC-20',zone:'LC',area:369.1,sqm:85.0,style:'Barn 85',land_price:60.0,build_cost:1750,daily_rent:200.0,roi_file:11.5,ah_price:null,status:'free',notes:'',latlng:[1061.37,1142.47]},
+  {id:'LC-22',zone:'LC',area:379.4,sqm:85.0,style:'Barn 85',land_price:60.0,build_cost:1750,daily_rent:200.0,roi_file:11.5,ah_price:null,status:'free',notes:'',latlng:[1033.11,1160.4]},
+  {id:'LC-24',zone:'LC',area:392.9,sqm:85.0,style:'Barn 85',land_price:60.0,build_cost:1750,daily_rent:200.0,roi_file:11.4,ah_price:null,status:'free',notes:'',latlng:[1005.21,1178.32]},
+  {id:'LC-26',zone:'LC',area:398.4,sqm:85.0,style:'Barn 85',land_price:60.0,build_cost:1750,daily_rent:200.0,roi_file:11.4,ah_price:null,status:'free',notes:'',latlng:[977.31,1194.73]},
+  {id:'LC-28',zone:'LC',area:377.0,sqm:85.0,style:'Barn 85',land_price:60.0,build_cost:1750,daily_rent:200.0,roi_file:11.5,ah_price:null,status:'free',notes:'',latlng:[948.51,1210.02]},
+  {id:'LC-30',zone:'LC',area:342.3,sqm:55.0,style:'Barn 55',land_price:60.0,build_cost:1750,daily_rent:150.0,roi_file:12.7,ah_price:null,status:'free',notes:'',latlng:[919.03,1225.09]},
+  {id:'LC-32',zone:'LC',area:430.3,sqm:85.0,style:'Barn 85',land_price:60.0,build_cost:1750,daily_rent:200.0,roi_file:11.3,ah_price:null,status:'free',notes:'',latlng:[887.58,1245.68]},
+  {id:'LD-2',zone:'LD',area:420.0,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1750,daily_rent:200.0,roi_file:10.8,ah_price:null,status:'free',notes:'',latlng:[749.36,1216.97]},
+  {id:'LD-4',zone:'LD',area:420.0,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1750,daily_rent:200.0,roi_file:10.8,ah_price:null,status:'free',notes:'',latlng:[736.95,1247.7]},
+  {id:'LD-6',zone:'LD',area:420.0,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1750,daily_rent:200.0,roi_file:10.8,ah_price:null,status:'free',notes:'',latlng:[724.53,1278.43]},
+  {id:'LD-8',zone:'LD',area:420.1,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1750,daily_rent:200.0,roi_file:10.8,ah_price:null,status:'free',notes:'',latlng:[712.11,1309.16]},
+  {id:'LD-10',zone:'LD',area:436.0,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1750,daily_rent:200.0,roi_file:10.7,ah_price:null,status:'free',notes:'',latlng:[702.44,1343.36]},
+  {id:'LD-12',zone:'LD',area:395.1,sqm:85.0,style:'Barn 85',land_price:80.0,build_cost:1750,daily_rent:200.0,roi_file:10.9,ah_price:null,status:'free',notes:'',latlng:[700.12,1376.76]},
+  {id:'LD-14',zone:'LD',area:522.0,sqm:115.0,style:'Barn 115',land_price:80.0,build_cost:1750,daily_rent:250.0,roi_file:10.1,ah_price:null,status:'free',notes:'',latlng:[699.07,1422.07]},
+  {id:'AH-F1-01',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-02',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-03',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-04',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-05',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-06',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-07',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-08',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-09',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-10',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-11',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-12',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-13',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-14',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-15',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-16',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-17',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-18',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-19',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-20',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-21',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-22',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-23',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-24',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-25',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-26',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-27',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-28',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-29',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F1-30',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-31',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-32',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-33',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-34',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-35',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-36',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-37',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-38',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-39',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-40',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-41',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-42',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-43',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-44',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-45',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-46',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-47',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-48',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-49',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-50',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-51',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-52',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-53',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-54',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-55',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-56',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-57',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-58',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-59',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F2-60',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-61',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-62',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-63',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-64',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-65',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-66',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-67',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-68',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-69',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-70',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-71',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-72',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-73',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:80.0,roi_file:12.5,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-74',zone:'AH',area:0,sqm:35.0,style:'Studio 35.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:63000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-75',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-76',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-77',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-78',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-79',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-80',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-81',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-82',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-83',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-84',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-85',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-86',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-87',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-88',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-89',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-90',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-91',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-92',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-93',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-94',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-95',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-96',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-97',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-98',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-99',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+  {id:'AH-F3-100',zone:'AH',area:0,sqm:50.0,style:'Junior Suite 50.0m²',land_price:0,build_cost:0,daily_rent:120.0,roi_file:13.1,ah_price:90000.0,status:'free',notes:'',latlng:null},
+];
+
+// ═══════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════
+const CFG = {
+  sheetsUrl: localStorage.getItem('gc_sheets_url') || '',
+  pageSize: 20,
+  refreshMs: 5 * 60 * 1000
+};
+const MAP_IMG = 'https://galt-map-2026.surge.sh/Assets/masterplan_leaflet.jpg';
+const MAP_BOUNDS = [[0,0],[2383.94,1683.78]];
+const ZONE_COLORS = {LA:'#a24035',LB:'#4a8f4e',LC:'#6e7160',LD:'#a1b5a9'};
+const STATUS_COLORS = {free:'#27ae60',reserved:'#e67e22',sold:'#7f8c8d'};
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let PLOTS = [...INVENTORY];
+let filtered = [...PLOTS];
+let sortKey = 'id'; let sortAsc = true;
+let curPage = 1;
+let selPlot = null;
+let leafletMap = null;
+let markers = {};
+
+// ═══════════════════════════════════════
+// PAGE NAV
+// ═══════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+  if (id === 'map') {
+    setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 100);
+  }
+}
+
+// ═══════════════════════════════════════
+// LEAFLET MAP
+// ═══════════════════════════════════════
+function initMap() {
+  leafletMap = L.map('leaflet-map', {
+    crs: L.CRS.Simple, minZoom: -2, maxZoom: 2, zoomSnap: 0.1,
+    attributionControl: false
+  });
+
+  L.imageOverlay(MAP_IMG, MAP_BOUNDS).addTo(leafletMap);
+  leafletMap.fitBounds(MAP_BOUNDS);
+
+  renderMapMarkers();
+  setTimeout(() => { leafletMap.invalidateSize(); leafletMap.fitBounds(MAP_BOUNDS); }, 800);
+}
+
+function markerColor(p) {
+  return STATUS_COLORS[p.status] || '#888';
+}
+function markerBorder(p) {
+  return ZONE_COLORS[p.zone] || '#fff';
+}
+
+function renderMapMarkers() {
+  // Clear old markers
+  Object.values(markers).forEach(m => m.remove());
+  markers = {};
+
+  const mapPlots = PLOTS.filter(p => p.latlng);
+
+  mapPlots.forEach(p => {
+    const sc = markerColor(p);
+    const bc = markerBorder(p);
+    const num = p.id.split('-').slice(1).join('-');
+
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="
+        width:26px;height:26px;border-radius:50%;
+        background:${sc};border:2.5px solid ${bc};
+        display:flex;align-items:center;justify-content:center;
+        color:#fff;font-weight:700;font-size:9px;
+        box-shadow:0 2px 6px rgba(0,0,0,.4);
+        cursor:pointer;transition:transform .15s;
+        " data-id="${p.id}">${num}</div>`,
+      iconSize: [26,26], iconAnchor: [13,13]
+    });
+
+    const marker = L.marker(p.latlng, { icon }).addTo(leafletMap);
+    marker.on('click', () => selectFromMap(p.id));
+    markers[p.id] = marker;
+  });
+
+  updateLegendCounts();
+}
+
+function updateLegendCounts() {
+  const mapPlots = PLOTS.filter(p => p.latlng);
+  document.getElementById('lc-free').textContent  = mapPlots.filter(p => p.status === 'free').length;
+  document.getElementById('lc-res').textContent   = mapPlots.filter(p => p.status === 'reserved').length;
+  document.getElementById('lc-sold').textContent  = mapPlots.filter(p => p.status === 'sold').length;
+}
+
+function selectFromMap(pid) {
+  const p = PLOTS.find(x => x.id === pid);
+  if (!p) return;
+  selPlot = p;
+
+  // Pulse selected marker
+  Object.keys(markers).forEach(id => {
+    const el = markers[id].getElement();
+    if (!el) return;
+    const div = el.querySelector('div');
+    if (!div) return;
+    div.style.transform = id === pid ? 'scale(1.4)' : 'scale(1)';
+    div.style.zIndex = id === pid ? '2000' : '';
+    div.style.boxShadow = id === pid ? '0 0 14px rgba(0,0,0,.7)' : '0 2px 6px rgba(0,0,0,.4)';
+  });
+
+  renderMapPanel(p);
+  fillCalc(p);
+}
+
+function renderMapPanel(p) {
+  const price = calcPrice(p);
+  const roi = calcROI(p);
+  const zTag = `tag-${p.zone}`;
+  const stKey = p.status === 'reserved' ? 'res' : p.status;
+  const sTxt = t('status_' + stKey) || p.status;
+  const sCls = p.status;
+
+  document.getElementById('map-panel-body').innerHTML = `
+    <div class="plot-id">${p.id}</div>
+    <span class="plot-zone-tag ${zTag}">${p.zone} ${t('th_zone')}</span>
+    ${p.notes ? `<p style="font-size:12px;color:var(--muted);margin-bottom:10px">${p.notes}</p>` : ''}
+    <div class="status-box ${sCls}"><div class="stxt">${sTxt}</div></div>
+    <div class="info-row"><span class="lbl">${t('house')}</span><span class="val">${p.sqm} m²</span></div>
+    ${p.zone !== 'AH' ? `<div class="info-row"><span class="lbl">${t('plot_area')}</span><span class="val">${p.area} m²</span></div>` : ''}
+    <div class="info-row"><span class="lbl">${t('style')}</span><span class="val">${p.style}</span></div>
+    <div class="info-row"><span class="lbl">${t('price')}</span><span class="val" style="color:var(--accent-h)">$${price.toLocaleString()}</span></div>
+    <div class="info-row"><span class="lbl">${t('daily_rent')}</span><span class="val">$${p.daily_rent}</span></div>
+    <div class="mini-roi">
+      <div class="rl">${t('roi_annual')}</div>
+      <div class="r">${roi.toFixed(1)}%</div>
+      <div class="profit">${t('annual_inc')}: $${Math.round(price * roi / 100).toLocaleString()}</div>
+    </div>
+    <button class="go-inv-btn" onclick="goToInventory('${p.id}')">${t('go_inv')}</button>
+  `;
+}
+
+function goToInventory(pid) {
+  showPage('inv');
+  const p = PLOTS.find(x => x.id === pid);
+  if (p) { selPlot = p; fillCalc(p); applyFilters(); }
+}
+
+// ═══════════════════════════════════════
+// INVENTORY TABLE
+// ═══════════════════════════════════════
+function calcPrice(p) {
+  if (p.ah_price) return p.ah_price;
+  return Math.round(p.area * p.land_price + p.sqm * p.build_cost);
+}
+function calcROI(p, occ=.45, mgmt=.40) {
+  const cp = calcPrice(p), gr = p.daily_rent * 365 * occ;
+  const net = gr * (1-mgmt) * .82;
+  return cp > 0 ? (net/cp*100) : 0;
+}
+
+function updateStats() {
+  const free = PLOTS.filter(p=>p.status==='free').length;
+  const res  = PLOTS.filter(p=>p.status==='reserved').length;
+  const sold = PLOTS.filter(p=>p.status==='sold').length;
+  const val  = PLOTS.filter(p=>p.status==='free').reduce((s,p)=>s+calcPrice(p),0);
+  document.getElementById('st-total').textContent = PLOTS.length;
+  document.getElementById('st-free').textContent  = free;
+  document.getElementById('st-res').textContent   = res;
+  document.getElementById('st-sold').textContent  = sold;
+  document.getElementById('st-val').textContent   = '$'+Math.round(val/1000)+'K';
+}
+
+function applyFilters() {
+  const zone   = document.getElementById('s-zone').value;
+  const status = document.getElementById('s-status').value;
+  const type   = document.getElementById('s-type').value;
+  const q      = (document.getElementById('s-q').value||'').toLowerCase();
+
+  filtered = PLOTS.filter(p => {
+    if (zone   !== 'all' && p.zone   !== zone)   return false;
+    if (status !== 'all' && p.status !== status) return false;
+    if (type   !== 'all' && p.style  !== type)   return false;
+    if (q && !p.id.toLowerCase().includes(q) && !p.style.toLowerCase().includes(q) && !(p.notes||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  curPage = 1;
+  sortAndRender();
+}
+
+function sortT(key) {
+  if (sortKey === key) sortAsc = !sortAsc;
+  else { sortKey = key; sortAsc = true; }
+  sortAndRender();
+}
+
+function sortAndRender() {
+  filtered.sort((a,b) => {
+    let va, vb;
+    if (sortKey==='price') {va=calcPrice(a);vb=calcPrice(b);}
+    else if (sortKey==='roi') {va=calcROI(a);vb=calcROI(b);}
+    else { va=a[sortKey]; vb=b[sortKey]; }
+    if (typeof va==='string') return sortAsc?va.localeCompare(vb):vb.localeCompare(va);
+    return sortAsc?va-vb:vb-va;
+  });
+  renderTable();
+}
+
+function renderTable() {
+  const tbody = document.getElementById('inv-tbody');
+  tbody.innerHTML = '';
+  const start = (curPage-1)*CFG.pageSize;
+  const page  = filtered.slice(start, start+CFG.pageSize);
+
+  if (!page.length) {
+    tbody.innerHTML = '<tr><td colspan="9"><div class="empty">🏡 ვერ მოიძებნა</div></td></tr>';
+    renderPag();
+    return;
+  }
+
+  page.forEach(p => {
+    const price = calcPrice(p);
+    const roi   = calcROI(p).toFixed(1);
+    const tr    = document.createElement('tr');
+    if (selPlot && selPlot.id === p.id) tr.classList.add('sel');
+    const bc = p.status==='free'?'badge-free':p.status==='reserved'?'badge-reserved':'badge-sold';
+    const bt = p.status==='free'?'ხელმ.':p.status==='reserved'?'დაჯავ.':'გაყ.';
+    const zc = 'z-'+p.zone;
+    tr.innerHTML = `
+      <td><strong>${p.id}</strong></td>
+      <td><span class="zpill ${zc}">${p.zone}</span></td>
+      <td>${p.sqm}m²</td>
+      <td>${p.zone==='AH'?'—':p.area+'m²'}</td>
+      <td style="font-size:11px;color:#555">${p.style}</td>
+      <td><strong style="color:var(--accent-h)">$${price.toLocaleString()}</strong></td>
+      <td style="color:${parseFloat(roi)>10?'#1a7a3f':'#888'};font-weight:600">${roi}%</td>
+      <td><span class="badge ${bc}">${bt}</span></td>
+      <td style="font-size:11px;color:var(--muted);max-width:100px;overflow:hidden;text-overflow:ellipsis">${p.notes||''}</td>
+    `;
+    tr.addEventListener('click', () => { selPlot=p; fillCalc(p); renderTable(); });
+    tbody.appendChild(tr);
+  });
+  renderPag();
+}
+
+function renderPag() {
+  const pag   = document.getElementById('pag');
+  const total = Math.ceil(filtered.length/CFG.pageSize);
+  pag.innerHTML = `<span class="pi">${filtered.length} ჩანაწ.</span>`;
+  for (let i=1;i<=total;i++) {
+    const btn=document.createElement('button');
+    btn.className='pb'+(i===curPage?' act':'');
+    btn.textContent=i;
+    btn.onclick=()=>{curPage=i;renderTable();};
+    pag.appendChild(btn);
+  }
+}
+
+// ═══════════════════════════════════════
+// CALCULATORS
+// ═══════════════════════════════════════
+function fillCalc(p) {
+  const price = calcPrice(p);
+  document.getElementById('ci-id').textContent   = p.id;
+  document.getElementById('ci-type').textContent = p.style + (p.zone!=='AH' ? ' | '+p.area+'m² ნაკვ.' : ' | Apart Hotel') + (p.notes?' | '+p.notes:'');
+  document.getElementById('c-capex').value = price;
+  document.getElementById('c-rent').value  = p.daily_rent;
+  recalc();
+}
+
+function recalc() {
+  const capex = parseFloat(document.getElementById('c-capex').value)||0;
+  const rent  = parseFloat(document.getElementById('c-rent').value)||0;
+  const occ   = parseFloat(document.getElementById('c-occ').value)/100;
+  const mgmt  = parseFloat(document.getElementById('c-mgmt').value)/100;
+  const crate = parseFloat(document.getElementById('comm-r').value)/100;
+
+  document.getElementById('occ-l').textContent    = Math.round(occ*100)+'%';
+  document.getElementById('mgmt-l').textContent   = Math.round(mgmt*100)+'%';
+  document.getElementById('comm-rl').textContent  = (crate*100)+'%';
+
+  const gross = rent*365*occ;
+  const net   = gross*(1-mgmt)*.82;
+  const roi   = capex>0?(net/capex*100):0;
+  const pb    = net>0?(capex/net):0;
+  const comm  = capex*crate;
+
+  document.getElementById('r-gr').textContent  = '$'+Math.round(gross).toLocaleString();
+  document.getElementById('r-inc').textContent = '$'+Math.round(net).toLocaleString();
+  document.getElementById('r-roi').textContent = roi.toFixed(1)+'%';
+  document.getElementById('r-pb').textContent  = pb.toFixed(1)+'წ';
+  document.getElementById('comm-v').textContent = '$'+Math.round(comm).toLocaleString();
+  document.getElementById('comm-d').textContent = `${(crate*100)}% × $${capex.toLocaleString()}`;
+}
+
+['c-occ','c-mgmt','comm-r','c-rent'].forEach(id=>document.getElementById(id).addEventListener('input',recalc));
+
+// ═══════════════════════════════════════
+// I18N — TRANSLATIONS
+// ═══════════════════════════════════════
+const I18N = {
+  ka: {
+    tab_map:'ინტ. რუქა', tab_inv:'ინვენტარი',
+    ready:'მზადაა', syncing:'სინქ...', sync_ok:'Sheets ✓', sync_err:'შეცდომა',
+    status_lbl:'სტატუსი',
+    st_free:'ხელმ.', st_res:'დაჯავ.', st_sold:'გაყ.',
+    st_free_full:'ხელმისაწვდომი', st_res_full:'დაჯავშნილი', st_sold_full:'გაყიდული',
+    all_zones:'ყველა ზონა', all_stat:'ყველა სტ.',
+    inv_title:'ინვენტარი', search_ph:'🔍 ID ან სტილი...',
+    total:'სულ', avail:'ხელმისაწვდომი', reserved:'დაჯავშნილი', sold:'გაყიდული', portfolio:'პორტფელი',
+    th_id:'ID', th_zone:'ზონა', th_house:'სახლი', th_plot:'ნაკვეთი',
+    th_type:'ტიპი', th_price:'ფასი', th_roi:'ROI', th_st:'სტ.', th_note:'შენიშვ.',
+    calc_title:'ROI კალკულატორი', no_sel:'← ნაკვეთი მოირჩიეთ',
+    capex_lbl:'ჯამური ფასი (CAPEX)', rent_lbl:'დღიური ქირა ($)',
+    occ_lbl:'დატვირთულობა', mgmt_lbl:'მართვის საკ.',
+    income_lbl:'წლ. შემ.', payback_lbl:'უკუგება', gross_lbl:'ბრუტო',
+    comm_title:'კომისია', your_comm:'შენი კომისია', comm_rate:'კომ. %:',
+    src_title:'📡 მონაცემები', src_embedded:'ჩაშენებული', sheets_btn:'📊 Google Sheets კავშირი',
+    refresh_btn:'🔄 ახლავე განახლება', records:'ჩანაწ.',
+    map_info:'📍 ნაკვეთის ინფო', map_click:'დააჭირეთ ნებისმიერ მარკერს',
+    map_prompt:'რუქაზე ნებისმიერ მარკერს დააჭირეთ',
+    house:'სახლი', plot_area:'ნაკვეთი', style:'სტილი', price:'ფასი',
+    daily_rent:'დღ. ქირა', roi_annual:'ROI (წლიური)', annual_inc:'წლ. შემ.',
+    go_inv:'📊 ინვენტარის ცხრილში ნახვა',
+    status_free:'✅ ხელმისაწვდომი', status_res:'🟡 დაჯავშნილი', status_sold:'⬛ გაყიდული',
+  },
+  en: {
+    tab_map:'Interactive Map', tab_inv:'Inventory',
+    ready:'Ready', syncing:'Syncing...', sync_ok:'Sheets ✓', sync_err:'Error',
+    status_lbl:'Status',
+    st_free:'Avail.', st_res:'Reserv.', st_sold:'Sold',
+    st_free_full:'Available', st_res_full:'Reserved', st_sold_full:'Sold',
+    all_zones:'All Zones', all_stat:'All Status',
+    inv_title:'Inventory', search_ph:'🔍 ID or style...',
+    total:'Total', avail:'Available', reserved:'Reserved', sold:'Sold', portfolio:'Portfolio',
+    th_id:'ID', th_zone:'Zone', th_house:'House', th_plot:'Plot',
+    th_type:'Type', th_price:'Price', th_roi:'ROI', th_st:'St.', th_note:'Notes',
+    calc_title:'ROI Calculator', no_sel:'← Select a unit',
+    capex_lbl:'Total Price (CAPEX)', rent_lbl:'Daily Rent ($)',
+    occ_lbl:'Occupancy', mgmt_lbl:'Mgmt. Fee',
+    income_lbl:'Ann. Income', payback_lbl:'Payback', gross_lbl:'Gross',
+    comm_title:'Commission', your_comm:'Your Commission', comm_rate:'Rate %:',
+    src_title:'📡 Data Source', src_embedded:'Embedded', sheets_btn:'📊 Connect Google Sheets',
+    refresh_btn:'🔄 Refresh Now', records:'records',
+    map_info:'📍 Plot Info', map_click:'Click any marker',
+    map_prompt:'Click any marker on the map to view details',
+    house:'House', plot_area:'Plot', style:'Style', price:'Price',
+    daily_rent:'Daily Rent', roi_annual:'ROI (Annual)', annual_inc:'Ann. Income',
+    go_inv:'📊 View in Inventory Table',
+    status_free:'✅ Available', status_res:'🟡 Reserved', status_sold:'⬛ Sold',
+  },
+  ru: {
+    tab_map:'Интер. карта', tab_inv:'Инвентарь',
+    ready:'Готово', syncing:'Синхр...', sync_ok:'Sheets ✓', sync_err:'Ошибка',
+    status_lbl:'Статус',
+    st_free:'Своб.', st_res:'Бронь', st_sold:'Продано',
+    st_free_full:'Доступно', st_res_full:'Забронировано', st_sold_full:'Продано',
+    all_zones:'Все зоны', all_stat:'Все статусы',
+    inv_title:'Инвентарь', search_ph:'🔍 ID или тип...',
+    total:'Всего', avail:'Доступно', reserved:'Забронировано', sold:'Продано', portfolio:'Портфель',
+    th_id:'ID', th_zone:'Зона', th_house:'Дом', th_plot:'Участок',
+    th_type:'Тип', th_price:'Цена', th_roi:'ROI', th_st:'Ст.', th_note:'Заметки',
+    calc_title:'Калькулятор ROI', no_sel:'← Выберите объект',
+    capex_lbl:'Общая цена (CAPEX)', rent_lbl:'Дневная аренда ($)',
+    occ_lbl:'Загруженность', mgmt_lbl:'Комис. упр.',
+    income_lbl:'Год. доход', payback_lbl:'Окупаемость', gross_lbl:'Брутто',
+    comm_title:'Комиссия', your_comm:'Ваша комиссия', comm_rate:'% комис.:',
+    src_title:'📡 Источник данных', src_embedded:'Встроенные', sheets_btn:'📊 Подключить Google Sheets',
+    refresh_btn:'🔄 Обновить', records:'записей',
+    map_info:'📍 Информация', map_click:'Нажмите маркер',
+    map_prompt:'Нажмите на любой маркер на карте',
+    house:'Дом', plot_area:'Участок', style:'Стиль', price:'Цена',
+    daily_rent:'Дн. аренда', roi_annual:'ROI (Годовой)', annual_inc:'Год. доход',
+    go_inv:'📊 Посмотреть в таблице',
+    status_free:'✅ Доступно', status_res:'🟡 Забронировано', status_sold:'⬛ Продано',
+  }
+};
+
+let LANG = 'ka';
+function t(k) { return (I18N[LANG]||I18N.ka)[k] || k; }
+
+function setLang(l) {
+  LANG = l;
+  document.documentElement.lang = l;
+
+  // ── Lang pill buttons ──
+  document.querySelectorAll('.lang-pill button').forEach(b => {
+    b.classList.toggle('active',
+      b.textContent.trim() === l ||
+      (l==='ka' && b.textContent.includes('ქართ')));
+  });
+
+  // ── data-i18n elements ──
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const v = t(el.getAttribute('data-i18n'));
+    if (el.tagName === 'INPUT') el.placeholder = v;
+    else el.textContent = v;
+  });
+
+  // ── Nav tabs ──
+  const tm = document.querySelector('#tab-map span');
+  if (tm) tm.textContent = t('tab_map');
+  const ti = document.querySelector('#tab-inv span');
+  if (ti) ti.textContent = t('tab_inv');
+
+  // ── Map panel header ──
+  const mph = document.querySelector('.map-panel-header h3');
+  if (mph) mph.textContent = t('map_info');
+  const mpp = document.querySelector('.map-panel-header p');
+  if (mpp) mpp.textContent = t('map_click');
+  const mns = document.querySelector('.map-no-sel p');
+  if (mns) mns.textContent = t('map_prompt');
+
+  // ── Stats bar labels ──
+  const sls = document.querySelectorAll('.stat .sl');
+  ['total','avail','reserved','sold','portfolio'].forEach((k,i) => {
+    if (sls[i]) sls[i].textContent = t(k);
+  });
+
+  // ── Inventory panel title ──
+  const pt = document.querySelector('.panel-title');
+  if (pt) pt.textContent = t('inv_title');
+
+  // ── Search box placeholder ──
+  const sq = document.getElementById('s-q');
+  if (sq) sq.placeholder = t('search_ph');
+
+  // ── Zone filter (only "all" option translates; zone names stay) ──
+  const szOpts = document.querySelectorAll('#s-zone option');
+  if (szOpts.length) szOpts[0].textContent = t('all_zones');
+
+  // ── Status filter options ──
+  const ssOpts = document.querySelectorAll('#s-status option');
+  if (ssOpts.length >= 4) {
+    ssOpts[0].textContent = t('all_stat');
+    ssOpts[1].textContent = t('st_free');
+    ssOpts[2].textContent = t('st_res');
+    ssOpts[3].textContent = t('st_sold');
+  }
+
+  // ── Table headers ──
+  const ths = document.querySelectorAll('thead th');
+  const thKeys = ['th_id','th_zone','th_house','th_plot','th_type','th_price','th_roi','th_st','th_note'];
+  ths.forEach((th, i) => {
+    if (!thKeys[i]) return;
+    const hasArrow = th.textContent.includes('↕');
+    th.textContent = t(thKeys[i]) + (hasArrow ? ' ↕' : '');
+  });
+
+  // ── ROI Calculator section ──
+  const calcSections = document.querySelectorAll('.calc-section');
+  if (calcSections[0]) {
+    const h = calcSections[0].querySelector('h4');
+    if (h) h.textContent = t('calc_title');
+    const ciId = document.getElementById('ci-id');
+    if (ciId && !selPlot) ciId.textContent = t('no_sel');
+    // Field labels
+    const fls = calcSections[0].querySelectorAll('.fl label');
+    ['capex_lbl','rent_lbl','occ_lbl','mgmt_lbl'].forEach((k,i) => {
+      if (fls[i]) fls[i].textContent = t(k);
+    });
+    // Result box labels
+    const rls = calcSections[0].querySelectorAll('.rl2');
+    if (rls[0]) rls[0].textContent = t('income_lbl');
+    if (rls[2]) rls[2].textContent = t('payback_lbl');
+    if (rls[3]) rls[3].textContent = t('gross_lbl');
+  }
+
+  // ── Commission section ──
+  if (calcSections[1]) {
+    const h = calcSections[1].querySelector('h4');
+    if (h) h.textContent = t('comm_title');
+    const ct = calcSections[1].querySelector('.ct');
+    if (ct) ct.textContent = t('your_comm');
+    const cr = calcSections[1].querySelector('.cr-row label');
+    if (cr) cr.textContent = t('comm_rate');
+  }
+
+  // ── Data source section ──
+  if (calcSections[2]) {
+    const h = calcSections[2].querySelector('h4');
+    if (h) h.textContent = t('src_title');
+    const btns = calcSections[2].querySelectorAll('button');
+    if (btns[0]) btns[0].textContent = t('sheets_btn');
+    if (btns[1]) btns[1].textContent = t('refresh_btn');
+  }
+
+  // ── Sync badge ──
+  const sl = document.getElementById('sync-lbl');
+  if (sl && sl.getAttribute('data-i18n') === 'ready') sl.textContent = t('ready');
+
+  // ── Re-render dynamic tables + map ──
+  if (PLOTS.length) { updateStats(); renderTable(); updateLegendCounts(); }
+  if (selPlot) renderMapPanel(selPlot);
+}
+
+// ═══════════════════════════════════════
+// GOOGLE SHEETS SYNC
+// ═══════════════════════════════════════
+function openSheetsModal()  { document.getElementById('sheets-modal').style.display='flex'; }
+function closeSheetsModal() { document.getElementById('sheets-modal').style.display='none'; }
+
+function connectSheets() {
+  let url = document.getElementById('sheets-url').value.trim();
+  // Auto-fix common URL formats
+  if (url.includes('/edit') || url.includes('/view')) {
+    alert('"Publish to web" URL სჭირდება, არა view/edit URL!\n\nFile → Share → Publish to web → Sheet1 → CSV → Publish');
+    return;
+  }
+  if (!url.includes('output=csv') && url.includes('docs.google.com')) {
+    // Try to auto-append format
+    url = url.includes('?') ? url + '&output=csv' : url + '?output=csv';
+  }
+  CFG.sheetsUrl = url;
+  localStorage.setItem('gc_sheets_url', url);
+  closeSheetsModal();
+  manualRefresh();
+}
+
+function setSyncStatus(state, lbl) {
+  const d = document.getElementById('sync-dot');
+  d.className = 'dot ' + state;
+  const sl = document.getElementById('sync-lbl');
+  sl.textContent = lbl;
+  sl.removeAttribute('data-i18n');
+}
+
+async function fetchCSV(url) {
+  // Try direct fetch first (works if CORS is enabled on published Sheets)
+  try {
+    const r = await fetch(url, {mode:'cors'});
+    if (r.ok) { const txt = await r.text(); if (txt.length > 10) return txt; }
+  } catch(e) {}
+  // Fallback: use allorigins CORS proxy
+  const proxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+  const r2 = await fetch(proxy);
+  if (!r2.ok) throw new Error('HTTP ' + r2.status);
+  return await r2.text();
+}
+
+async function manualRefresh() {
+  if (!CFG.sheetsUrl) { openSheetsModal(); return; }
+  setSyncStatus('loading', t('syncing'));
+  try {
+    const csv = await fetchCSV(CFG.sheetsUrl);
+    const parsed = await new Promise((res,rej) => Papa.parse(csv, {
+      header:true, skipEmptyLines:true,
+      complete:r=>res(r.data), error:rej
+    }));
+    if (parsed.length > 0) {
+      // Merge status/notes from Sheets into PLOTS (keep latlng)
+      const byId = {};
+      PLOTS.forEach(p => byId[p.id] = p);
+      parsed.forEach(row => {
+        if (!row.id) return;
+        if (byId[row.id]) {
+          byId[row.id].status = (row.status||'free').toLowerCase().trim();
+          byId[row.id].notes  = row.notes || '';
+          // Update prices if provided
+          if (row.daily_rent && parseFloat(row.daily_rent)) byId[row.id].daily_rent = parseFloat(row.daily_rent);
+          if (row.land_price && parseFloat(row.land_price)) byId[row.id].land_price = parseFloat(row.land_price);
+        }
+      });
+      setSyncStatus('ok','Sheets ✓');
+      document.getElementById('last-sync').textContent = new Date().toLocaleTimeString('ka-GE');
+      document.getElementById('src-info').innerHTML = `<strong>წყარო:</strong> Google Sheets (live)<br><strong>განახ.:</strong> <span id="last-sync">${new Date().toLocaleTimeString('ka-GE')}</span>`;
+      updateStats();
+      applyFilters();
+      renderMapMarkers(); // Refresh map colors
+    }
+  } catch(e) {
+    console.warn('Sheets error:', e);
+    setSyncStatus('err','შეც.');
+  }
+}
+
+setInterval(() => { if (CFG.sheetsUrl) manualRefresh(); }, CFG.refreshMs);
+
+// (setLang is defined in the I18N section above)
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  updateStats();
+  applyFilters();
+  initMap();
+  if (CFG.sheetsUrl) manualRefresh();
+});
+</script>
+</body>
+</html>

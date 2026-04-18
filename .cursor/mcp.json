@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "tesseract": {
-      "url": "http://localhost:7440/mcp",
-      "type": "http"
-    }
-  }
-}

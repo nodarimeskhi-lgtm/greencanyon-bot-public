@@ -24,3 +24,29 @@ Thumbs.db
 # Local secrets
 **/ .env
 **/ secret.json
+
+# Large binaries and assets (kept locally, not in Git)
+*.pdf
+*.pptx
+*.xlsx
+*.xlsm
+*.docx
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.mp4
+*.zip
+*.7z
+*.rar
+
+# Data and temporary files
+*.json
+*.txt
+*.csv
+!package.json
+!package-lock.json
+!tsconfig.json
+
+# Nested node_modules
+**/node_modules/

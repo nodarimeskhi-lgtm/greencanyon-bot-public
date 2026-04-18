@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ka">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ჩვენს შესახებ | გუნდი - Green Canyon Eco Village</title>
+    <style>
+        /* CSS ცვლადები (ბრენდის ფერები) */
+        :root {
+            --primary-bg: #f9f9f7;
+            /* ღია, თბილი ფონი */
+            --text-dark: #2c3e2e;
+            /* მუქი მწვანე ტექსტი */
+            --accent-gold: #c5a47e;
+            /* ოქროსფერი აქცენტი */
+            --card-bg: #ffffff;
+            --text-light: #5f6c61;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        /* მთავარი ბანერი (Hero Section) */
+        .hero-section {
+            text-align: center;
+            padding: 80px 20px;
+            background-color: var(--text-dark);
+            color: white;
+        }
+
+        .hero-section h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .hero-section p {
+            font-size: 1.1rem;
+            color: #d1d6d2;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* კონტეინერი შუაში მოსაქცევად */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 40px;
+            font-weight: 400;
+            border-bottom: 2px solid var(--accent-gold);
+            display: inline-block;
+            padding-bottom: 10px;
+        }
+
+        /* ჯგუფის შესახებ ბლოკი */
+        .about-group {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            margin-bottom: 80px;
+            flex-wrap: wrap;
+        }
+
+        .about-group .text-content {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .about-group h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+
+        .about-group p {
+            color: var(--text-light);
+            margin-bottom: 15px;
+        }
+
+        /* აქ ჩასვამთ ჯგუფის ლოგოს ან ფოტოს */
+        .about-group .image-placeholder {
+            flex: 1;
+            min-width: 300px;
+            height: 300px;
+            background-color: #e2e5e2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px dashed var(--accent-gold);
+        }
+
+        .image-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* გუნდის წევრების ბადე (Grid) */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 40px;
+        }
+
+        /* ინდივიდუალური წევრის ბარათი */
+        .team-member {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .team-member:hover {
+            transform: translateY(-5px);
+        }
+
+        /* წევრის ფოტოს კონტეინერი */
+        .member-photo {
+            width: 100%;
+            height: 350px;
+            background-color: #e2e5e2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+        }
+
+        .member-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* ფოტო ავტომატურად მოერგება ფორმატს */
+        }
+
+        /* წევრის ინფორმაცია (ფოტოს ქვემოთ) */
+        .member-info {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .member-info h3 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .member-info .role {
+            color: var(--accent-gold);
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .member-info p {
+            font-size: 0.95rem;
+            color: var(--text-light);
+            margin-bottom: 15px;
+        }
+
+        .linkedin-btn {
+            display: inline-block;
+            padding: 8px 20px;
+            border: 1px solid var(--accent-gold);
+            color: var(--accent-gold);
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .linkedin-btn:hover {
+            background-color: var(--accent-gold);
+            color: white;
+        }
+
+        /* რესპონსივისთვის */
+        @media (max-width: 768px) {
+            .hero-section h1 {
+                font-size: 2rem;
+            }
+
+            .about-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 1. მთავარი ბანერი -->
+    <section class="hero-section">
+        <h1>ადამიანები, რომლებიც ქმნიან ხედვას</h1>
+        <p>გაიცანით პროფესიონალთა გუნდი Green Canyon Eco Village-ის უკან</p>
+    </section>
+
+    <div class="container">
+
+        <!-- 2. ინფორმაცია კომპანიის ჯგუფზე (მაგალითად Galt) -->
+        <div class="about-group">
+            <div class="text-content">
+                <h2>კომპანიის ჯგუფის შესახებ</h2>
+                <p><strong>[აქ ჩაწერეთ ჯგუფის სახელი]</strong> აერთიანებს მრავალწლიან გამოცდილებას დეველოპმენტსა და
+                    სტუმართმოყვარეობის სექტორში.</p>
+                <p>აქ შეგიძლიათ დაამატოთ 2-3 წინადადება თქვენი მისიის, ფინანსური სტაბილურობის და განხორციელებული
+                    პროექტების (ან სამომავლო გეგმების) შესახებ. ეს ტექსტი ზრდის ინვესტორების ნდობას.</p>
+            </div>
+            <!-- ჯგუფის ლოგო ან ოფისის ფოტო -->
+            <div class="image-placeholder">
+                <img src="https://via.placeholder.com/600x400?text=Group/Company+Image" alt="Company Group">
+                <!-- ჩაანაცვლეთ src="" თქვენი ლოგოს ან ფოტოს ლინკით -->
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <h2 class="section-title">ჩვენი საკვანძო გუნდი</h2>
+        </div>
+
+        <!-- 3. გუნდის წევრების ბადე -->
+        <div class="team-grid">
+
+            <!-- წევრი 1 (მაგ: CEO) -->
+            <div class="team-member">
+                <div class="member-photo">
+                    <!-- ჩაანაცვლეთ src თქვენი ფოტოთი. იდეალური ზომა: 400x500px -->
+                    <img src="https://via.placeholder.com/400x500?text=CEO+Photo" alt="Team Member 1">
+                </div>
+                <div class="member-info">
+                    <h3>[სახელი გვარი]</h3>
+                    <div class="role">აღმასრულებელი დირექტორი (CEO)</div>
+                    <p>[აქ დაწერეთ მოკლე ბიოგრაფია: 10+ წლიანი გამოცდილება პროექტების მართვაში, ინვესტიციების მოზიდვასა
+                        და სტრატეგიულ განვითარებაში.]</p>
+                    <a href="[აქ ჩასვით LinkedIn ლინკი]" target="_blank" class="linkedin-btn">LinkedIn-ის პროფილი</a>
+                </div>
+            </div>
+
+            <!-- წევრი 2 (მაგ: CTO ან მთავარი ინჟინერი/არქიტექტორი) -->
+            <div class="team-member">
+                <div class="member-photo">
+                    <img src="https://via.placeholder.com/400x500?text=CTO/Architect+Photo" alt="Team Member 2">
+                </div>
+                <div class="member-info">
+                    <h3>[სახელი გვარი]</h3>
+                    <div class="role">მთავარი ინჟინერი / არქიტექტორი</div>
+                    <p>[მოკლე აღწერა: პასუხისმგებელია ინფრასტრუქტურის, ეკო-მდგრადი მშენებლობისა და ხარისხის სტანდარტების
+                        დაცვაზე.]</p>
+                    <a href="#" target="_blank" class="linkedin-btn">LinkedIn-ის პროფილი</a>
+                </div>
+            </div>
+
+            <!-- წევრი 3 (მაგ: გაყიდვების დირექტორი) -->
+            <div class="team-member">
+                <div class="member-photo">
+                    <img src="https://via.placeholder.com/400x500?text=Sales+Director+Photo" alt="Team Member 3">
+                </div>
+                <div class="member-info">
+                    <h3>[სახელი გვარი]</h3>
+                    <div class="role">გაყიდვების დირექტორი (CCO)</div>
+                    <p>[მოკლე აღწერა: მართავს საერთაშორისო პარტნიორებთან და ინვესტორებთან ურთიერთობას. ფოკუსირებულია
+                        გაყიდვების სტრატეგიაზე.]</p>
+                    <a href="#" target="_blank" class="linkedin-btn">LinkedIn-ის პროფილი</a>
+                </div>
+            </div>
+
+            <!-- შეგიძლიათ დააკოპიროთ მთლიანი "team-member" ბლოკი ახალი წევრის დასამატებლად -->
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>
