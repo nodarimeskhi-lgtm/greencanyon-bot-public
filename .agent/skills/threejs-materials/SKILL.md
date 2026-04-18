@@ -1,4 +1,4 @@
-# Three.js Materials
+﻿# Three.js Materials
 
 Material types, PBR rendering, custom shaders, and environment maps for Three.js.
 Use this skill when choosing materials, configuring PBR properties, writing custom shaders, or working with environment maps and textures.
