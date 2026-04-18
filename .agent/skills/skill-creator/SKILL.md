@@ -1,4 +1,4 @@
----
+﻿---
 name: skill-creator
 description: Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Claude's capabilities with specialized knowledge, workflows, or tool integrations.
 license: Complete terms in LICENSE.txt
@@ -12,7 +12,7 @@ This skill provides guidance for creating effective skills.
 
 Skills are modular, self-contained packages that extend Claude's capabilities by providing
 specialized knowledge, workflows, and tools. Think of them as "onboarding guides" for specific
-domains or tasks—they transform Claude from a general-purpose agent into a specialized agent
+domains or tasksâ€”they transform Claude from a general-purpose agent into a specialized agent
 equipped with procedural knowledge that no model can fully possess.
 
 ### What Skills Provide
@@ -50,15 +50,15 @@ Every skill consists of a required SKILL.md file and optional bundled resources:
 
 ```
 skill-name/
-├── SKILL.md (required)
-│   ├── YAML frontmatter metadata (required)
-│   │   ├── name: (required)
-│   │   └── description: (required)
-│   └── Markdown instructions (required)
-└── Bundled Resources (optional)
-    ├── scripts/          - Executable code (Python/Bash/etc.)
-    ├── references/       - Documentation intended to be loaded into context as needed
-    └── assets/           - Files used in output (templates, icons, fonts, etc.)
+â”œâ”€â”€ SKILL.md (required)
+â”‚   â”œâ”€â”€ YAML frontmatter metadata (required)
+â”‚   â”‚   â”œâ”€â”€ name: (required)
+â”‚   â”‚   â””â”€â”€ description: (required)
+â”‚   â””â”€â”€ Markdown instructions (required)
+â””â”€â”€ Bundled Resources (optional)
+    â”œâ”€â”€ scripts/          - Executable code (Python/Bash/etc.)
+    â”œâ”€â”€ references/       - Documentation intended to be loaded into context as needed
+    â””â”€â”€ assets/           - Files used in output (templates, icons, fonts, etc.)
 ```
 
 #### SKILL.md (required)
@@ -88,7 +88,7 @@ Documentation and reference material intended to be loaded as needed into contex
 - **Use cases**: Database schemas, API documentation, domain knowledge, company policies, detailed workflow guides
 - **Benefits**: Keeps SKILL.md lean, loaded only when Claude determines it's needed
 - **Best practice**: If files are large (>10k words), include grep search patterns in SKILL.md
-- **Avoid duplication**: Information should live in either SKILL.md or references files, not both. Prefer references files for detailed information unless it's truly core to the skill—this keeps SKILL.md lean while making information discoverable without hogging the context window. Keep only essential procedural instructions and workflow guidance in SKILL.md; move detailed reference material, schemas, and examples to references files.
+- **Avoid duplication**: Information should live in either SKILL.md or references files, not both. Prefer references files for detailed information unless it's truly core to the skillâ€”this keeps SKILL.md lean while making information discoverable without hogging the context window. Keep only essential procedural instructions and workflow guidance in SKILL.md; move detailed reference material, schemas, and examples to references files.
 
 ##### Assets (`assets/`)
 
@@ -150,12 +150,12 @@ For Skills with multiple domains, organize content by domain to avoid loading ir
 
 ```
 bigquery-skill/
-├── SKILL.md (overview and navigation)
-└── reference/
-    ├── finance.md (revenue, billing metrics)
-    ├── sales.md (opportunities, pipeline)
-    ├── product.md (API usage, features)
-    └── marketing.md (campaigns, attribution)
+â”œâ”€â”€ SKILL.md (overview and navigation)
+â””â”€â”€ reference/
+    â”œâ”€â”€ finance.md (revenue, billing metrics)
+    â”œâ”€â”€ sales.md (opportunities, pipeline)
+    â”œâ”€â”€ product.md (API usage, features)
+    â””â”€â”€ marketing.md (campaigns, attribution)
 ```
 
 When a user asks about sales metrics, Claude only reads sales.md.
@@ -164,11 +164,11 @@ Similarly, for skills supporting multiple frameworks or variants, organize by va
 
 ```
 cloud-deploy/
-├── SKILL.md (workflow + provider selection)
-└── references/
-    ├── aws.md (AWS deployment patterns)
-    ├── gcp.md (GCP deployment patterns)
-    └── azure.md (Azure deployment patterns)
+â”œâ”€â”€ SKILL.md (workflow + provider selection)
+â””â”€â”€ references/
+    â”œâ”€â”€ aws.md (AWS deployment patterns)
+    â”œâ”€â”€ gcp.md (GCP deployment patterns)
+    â””â”€â”€ azure.md (Azure deployment patterns)
 ```
 
 When the user chooses AWS, Claude only reads aws.md.
