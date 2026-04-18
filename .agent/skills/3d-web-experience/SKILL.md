@@ -1,4 +1,4 @@
-# 3D Web Experience
+﻿# 3D Web Experience
 
 Expert in building 3D experiences for the web -- Three.js, React Three Fiber, Spline, WebGL, and interactive 3D scenes.
 Use this skill when building product configurators, 3D portfolios, immersive websites, architectural walkthroughs, or interactive 3D presentations.
