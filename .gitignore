@@ -1,0 +1,26 @@
+node_modules/
+.netlify/
+*.log
+.vscode/
+.obsidian/
+.cursor/
+__pycache__/
+*.pyc
+.agent/
+.gemini/
+.env
+
+# Build and cache
+.next/
+dist/
+build/
+.cache/
+*.sst
+
+# System files
+Thumbs.db
+.DS_Store
+
+# Local secrets
+**/ .env
+**/ secret.json
