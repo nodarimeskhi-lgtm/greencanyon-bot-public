@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Green Canyon | Sales Evaluator</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Noto+Sans+Georgian:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+    <div id="app">
+        <header>
+            <div class="logo">GREEN CANYON <span>EVALUATOR</span></div>
+            <div class="header-controls">
+                <button id="lang-toggle" class="btn-secondary">🇬🇪 GE / 🇺🇸 EN</button>
+            </div>
+        </header>
+
+        <main>
+            <!-- Setup Screen -->
+            <section id="setup-screen" class="glass-panel">
+                <h1 data-key="setup-title">Sales Agent Training</h1>
+                <p data-key="setup-desc">Select a persona to start the simulation.</p>
+                
+                <div class="persona-grid" id="persona-list">
+                    <!-- Personas will be injected here -->
+                </div>
+            </section>
+
+            <!-- Chat Screen -->
+            <section id="chat-screen" class="glass-panel hidden">
+                <div class="chat-header">
+                    <div class="persona-info">
+                        <div class="persona-avatar" id="active-persona-avatar">?</div>
+                        <div>
+                            <h3 id="active-persona-name">Lead Name</h3>
+                            <p id="active-persona-status">In conversation...</p>
+                        </div>
+                    </div>
+                    <button id="end-session" class="btn-danger" data-key="end-btn">End & Grade</button>
+                </div>
+                
+                <div id="chat-messages" class="chat-messages"></div>
+                
+                <div id="typing-indicator" class="typing-indicator hidden">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+                
+                <div class="chat-input-area">
+                    <button id="voice-btn" class="btn-icon" title="Voice Input">🎤</button>
+                    <textarea id="chat-input" placeholder="Type or speak..."></textarea>
+                    <button id="send-btn" class="btn-primary">Send</button>
+                </div>
+                <div id="voice-status" class="voice-status hidden">
+                    <div class="wave"></div>
+                    <span data-key="voice-listening">Listening...</span>
+                </div>
+            </section>
+
+            <!-- Results Screen -->
+            <section id="results-screen" class="glass-panel hidden">
+                <h1 data-key="results-title">Evaluation Report</h1>
+                <div class="score-container">
+                    <div class="score-circle">
+                        <span id="final-score">0</span>
+                        <small>/ 10</small>
+                    </div>
+                    <div class="score-label" id="score-text">Analysis Complete</div>
+                </div>
+
+                <div class="metrics">
+                    <div class="metric">
+                        <span data-key="metric-accuracy">Accuracy</span>
+                        <div class="progress-bar"><div id="bar-accuracy" style="width: 0%"></div></div>
+                    </div>
+                    <div class="metric">
+                        <span data-key="metric-manner">Objection Handling</span>
+                        <div class="progress-bar"><div id="bar-objection" style="width: 0%"></div></div>
+                    </div>
+                    <div class="metric">
+                        <span data-key="metric-soft">Soft Skills</span>
+                        <div class="progress-bar"><div id="bar-soft" style="width: 0%"></div></div>
+                    </div>
+                </div>
+
+                <div id="feedback-area" class="feedback-list">
+                    <!-- Feedback items will be injected here -->
+                </div>
+
+                <button id="restart-btn" class="btn-primary" data-key="restart-btn">New Session</button>
+            </section>
+        </main>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
