@@ -203,7 +203,7 @@ html_template = """<!DOCTYPE html>
         .selector {
             margin-bottom: 25px;
         }
-        
+
         .selector label {
             display: block;
             font-size: 14px;
@@ -221,7 +221,7 @@ html_template = """<!DOCTYPE html>
             color: var(--text-dark);
             outline: none;
         }
-        
+
         .selector select:focus {
             border-color: var(--accent-green);
             box-shadow: 0 0 0 2px rgba(141, 178, 144, 0.2);
@@ -244,11 +244,11 @@ html_template = """<!DOCTYPE html>
             margin-top: 0;
             font-size: 16px;
         }
-        
+
         .promo-card .value {
             color: var(--accent-red);
         }
-        
+
         .no-alt-msg {
             display: none;
             text-align: center;
@@ -259,13 +259,25 @@ html_template = """<!DOCTYPE html>
             border-radius: 8px;
             border: 1px dashed var(--border);
         }
+
+        .sync-badge {
+            background-color: var(--accent-green);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            margin-left: 10px;
+            vertical-align: middle;
+            display: none;
+        }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
 
 <div class="calc-wrapper">
     <div class="header">
-        <h1 data-i18n="title">Detailed ROI Calculator</h1>
+        <h1><span data-i18n="title">Detailed ROI Calculator</span> <span id="sync_badge" class="sync-badge">Live</span></h1>
         <div class="langs">
             <button class="lang-btn active" onclick="setLang('ka')">KA</button>
             <button class="lang-btn" onclick="setLang('en')">EN</button>
@@ -274,7 +286,7 @@ html_template = """<!DOCTYPE html>
     </div>
 
     <div class="main-content">
-        
+
         <div class="selector">
             <label data-i18n="select_plot">Select Plot</label>
             <select id="plotSelect" onchange="render()"></select>
@@ -284,7 +296,7 @@ html_template = """<!DOCTYPE html>
             <div class="tab active" id="tabStandard" onclick="setTab('standard')" data-i18n="tab_standard">Standard Solution</div>
             <div class="tab" id="tabAlternative" onclick="setTab('alternative')" data-i18n="tab_alternative">Alternative / Promo</div>
         </div>
-        
+
         <div id="no-alt-msg" class="no-alt-msg" data-i18n="no_alternative">
             No alternative offer is available for this plot.
         </div>
@@ -331,7 +343,7 @@ html_template = """<!DOCTYPE html>
                     <span class="value" id="val_post">-</span>
                 </div>
             </div>
-            
+
             <!-- Rental & ROI -->
             <div class="data-card" style="grid-column: 1 / -1;">
                 <h3 data-i18n="sec_returns">Expected Returns</h3>
@@ -366,7 +378,7 @@ html_template = """<!DOCTYPE html>
 
 <script>
     const DATA = __DATA_PAYLOAD__;
-    
+
     const DICT = {
         ka: {
             title: "საინვესტიციო კალკულატორი",
@@ -442,26 +454,26 @@ html_template = """<!DOCTYPE html>
     let currentLang = 'ka';
     let currentPlotId = '';
     let currentTab = 'standard';
-    
+
     function fmtC(val) {
         if (!val) return '$0';
         return '$' + Math.round(val).toLocaleString();
     }
-    
+
     function init() {
         const urlParams = new URLSearchParams(window.location.search);
         let urlPlot = urlParams.get('plot');
-        
+
         const sel = document.getElementById('plotSelect');
-        const ids = Object.keys(DATA).sort();
-        
+        const ids = Object.keys(DATA).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+
         ids.forEach(id => {
             const opt = document.createElement('option');
             opt.value = id;
             opt.textContent = id;
             sel.appendChild(opt);
         });
-        
+
         if (urlPlot && ids.includes(urlPlot)) {
             currentPlotId = urlPlot;
             sel.value = urlPlot;
@@ -469,24 +481,72 @@ html_template = """<!DOCTYPE html>
             currentPlotId = ids[0];
             sel.value = currentPlotId;
         }
-        
+
         setLang('ka'); // Render handles population
+        fetchLiveCSV();
     }
-    
+
+    async function fetchLiveCSV() {
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQf7QPiuQrajThqiHwSQxGSQQ1nb9XEU8YHmK5atshH6VxSTb90QjZIEUGuAlImhQ/pub?output=csv";
+        const rawUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(CSV_URL);
+        try {
+            const res = await fetch(rawUrl);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const csv = await res.text();
+            Papa.parse(csv, {
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    const parseNum = (str) => {
+                        if (!str) return 0;
+                        str = String(str).replace(/\\s/g, '').replace(/,/g, '.');
+                        return parseFloat(str) || 0;
+                    };
+                    results.data.forEach(row => {
+                        let id = row['ნაკვეთის კოდი'] || row['აპარტ ოტელის ნომერი'];
+                        if (!id) return;
+                        id = id.trim();
+                        if (!DATA[id] || !DATA[id].standard) return;
+
+                        let st = DATA[id].standard;
+                        if (row['სახლის სტილი']) st.house_style = row['სახლის სტილი'];
+                        if (row['ნაკვეთის ფართობი (მ2)']) st.land_area = parseNum(row['ნაკვეთის ფართობი (მ2)']);
+                        if (row['სახლის ფართი (მ2)']) st.house_area = parseNum(row['სახლის ფართი (მ2)']);
+                        if (row['საინვესტიცო ღირებულება']) st.total_investment = parseNum(row['საინვესტიცო ღირებულება']);
+
+                        st.financial = st.financial || {};
+                        if (row['ბეი - რეზერვი $']) st.financial.reservation = parseNum(row['ბეი - რეზერვი $']);
+                        if (row['პირველი შენატანი 10%']) st.financial.downpayment_10 = parseNum(row['პირველი შენატანი 10%']);
+                        if (row['ყოველთვიური (36 თვე)']) st.financial.monthly_36 = parseNum(row['ყოველთვიური (36 თვე)']);
+                        if (row['პოსტ-ჰენდოვერი (20%)']) st.financial.post_handover_20 = parseNum(row['პოსტ-ჰენდოვერი (20%)']);
+                        if (row['დღიური ქირის ფასი ($)']) st.financial.daily_rent = parseNum(row['დღიური ქირის ფასი ($)']);
+                        if (row['პესიმისტური Rental ROI %']) st.financial.roi_percent = parseNum(row['პესიმისტური Rental ROI %']);
+                        if (row['პესიმისტური უკუგება (წელი)']) st.financial.payback_years = parseNum(row['პესიმისტური უკუგება (წელი)']);
+                        if (row['სააქციო შეთავაზება 8% გარანტირებული უკუგება 2 წელი']) st.financial.promo_8_percent = parseNum(row['სააქციო შეთავაზება 8% გარანტირებული უკუგება 2 წელი']);
+                    });
+                    document.getElementById('sync_badge').style.display = 'inline-block';
+                    render();
+                }
+            });
+        } catch(err) {
+            console.error("Failed to fetch live spreadsheet data: ", err);
+        }
+    }
+
     function setLang(lang) {
         currentLang = lang;
         document.querySelectorAll('.lang-btn').forEach(b => {
            b.classList.toggle('active', b.innerText.toLowerCase() === lang);
         });
-        
+
         document.querySelectorAll('[data-i18n]').forEach(el => {
            const key = el.getAttribute('data-i18n');
            if(DICT[lang][key]) el.textContent = DICT[lang][key];
         });
-        
+
         render();
     }
-    
+
     function setTab(tab) {
         const plotData = DATA[currentPlotId];
         if (tab === 'alternative' && !plotData.alternative) return; // Prevent selection
@@ -495,11 +555,11 @@ html_template = """<!DOCTYPE html>
         document.getElementById('tabAlternative').classList.toggle('active', tab === 'alternative');
         render();
     }
-    
+
     function render() {
         currentPlotId = document.getElementById('plotSelect').value;
         const plotData = DATA[currentPlotId];
-        
+
         // Check Alt Availability
         const tabAlt = document.getElementById('tabAlternative');
         if (!plotData.alternative) {
@@ -510,9 +570,9 @@ html_template = """<!DOCTYPE html>
         } else {
             tabAlt.classList.remove('disabled');
         }
-        
+
         const d = plotData[currentTab];
-        
+
         if (!d) { // fallback
            document.getElementById('no-alt-msg').style.display = 'block';
            document.getElementById('data-grid').style.display = 'none';
@@ -522,33 +582,41 @@ html_template = """<!DOCTYPE html>
            document.getElementById('no-alt-msg').style.display = 'none';
            document.getElementById('data-grid').style.display = 'grid';
         }
-        
+
+        // Property Details Parsing & Translations
+        let houseStyle = d.house_style || '-';
+        if (currentLang === 'en') {
+            houseStyle = houseStyle.replace('(მაღალი ამონაგები)', '(High Return)').replace('ყველა ტიპი', 'All Types');
+        } else if (currentLang === 'ru') {
+            houseStyle = houseStyle.replace('(მაღალი ამონაგები)', '(Высокая доходность)').replace('ყველა ტიპი', 'Все типы');
+        }
+
         // Population
-        document.getElementById('val_house_style').textContent = d.house_style || '-';
+        document.getElementById('val_house_style').textContent = houseStyle;
         document.getElementById('val_land_area').textContent = d.land_area || '-';
         document.getElementById('val_house_area').textContent = d.house_area || '-';
         document.getElementById('val_total_investment').textContent = fmtC(d.total_investment);
-        
+
         document.getElementById('val_reservation').textContent = fmtC(d.financial.reservation);
         document.getElementById('val_downpayment').textContent = fmtC(d.financial.downpayment_10);
-        
+
         const mo = d.financial.monthly_36;
         const post = d.financial.post_handover_20;
-        
+
         if (mo > 0) {
             document.getElementById('row_monthly').style.display = 'flex';
             document.getElementById('val_monthly').textContent = fmtC(mo);
         } else {
             document.getElementById('row_monthly').style.display = 'none';
         }
-        
+
         if (post > 0) {
             document.getElementById('row_post').style.display = 'flex';
             document.getElementById('val_post').textContent = fmtC(post);
         } else {
             document.getElementById('row_post').style.display = 'none';
         }
-        
+
         // Returns
         const dr = d.financial.daily_rent;
         if(dr > 0) {
@@ -557,10 +625,15 @@ html_template = """<!DOCTYPE html>
         } else {
              document.getElementById('row_rent').style.display = 'none';
         }
-        
+
+        let pb = d.financial.payback_years;
+        if (!pb && d.financial.roi_percent > 0) {
+            pb = 100 / d.financial.roi_percent;
+        }
+
         document.getElementById('val_roi').textContent = d.financial.roi_percent ? (d.financial.roi_percent).toFixed(1) + '%' : '-';
-        document.getElementById('val_payback').textContent = d.financial.payback_years ? (d.financial.payback_years).toFixed(1) : '-';
-        
+        document.getElementById('val_payback').textContent = pb ? pb.toFixed(1) : '-';
+
         // Promo
         const p8 = d.financial.promo_8_percent;
         if (p8 > 0) {
@@ -570,7 +643,7 @@ html_template = """<!DOCTYPE html>
             document.getElementById('promo-card').style.display = 'none';
         }
     }
-    
+
     window.onload = init;
 </script>
 </body>

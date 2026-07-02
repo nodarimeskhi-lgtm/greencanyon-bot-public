@@ -1,5 +1,3 @@
-const axios = require('axios');
-
 exports.handler = async (event, context) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
@@ -14,8 +12,11 @@ exports.handler = async (event, context) => {
       return { statusCode: 200, body: JSON.stringify({ status: 'skipped' }) };
     }
 
-    // Send to Google Apps Script Web App
-    await axios.post(scriptUrl, logData);
+    const response = await fetch(scriptUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(logData)
+    });
 
     return {
       statusCode: 200,

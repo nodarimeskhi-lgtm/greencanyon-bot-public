@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Green Canyon Wellness - ინვესტორთა ბროშურა</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1F3F29; /* Deep Forest Green */
+            --secondary: #2C5435; /* Lighter Green */
+            --accent: #CBA258; /* Premium Gold */
+            --bg-light: #F9F8F5; /* Creamy White */
+            --text-dark: #1A1A1A;
+            --text-light: #F0F0F0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 600;
+        }
+
+        /* Page Container (A4 Proportions for Print/PDF) */
+        .page {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #fff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        /* Cover Section */
+        .cover {
+            height: 100vh;
+            min-height: 800px;
+            background: linear-gradient(rgba(31, 63, 41, 0.85), rgba(31, 63, 41, 0.95)), url('https://images.unsplash.com/photo-1540555700478-4be289fbecef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .cover h3 {
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .cover h1 {
+            font-size: 64px;
+            margin: 0 0 30px 0;
+            line-height: 1.2;
+        }
+
+        .cover p {
+            font-size: 20px;
+            max-width: 600px;
+            font-weight: 300;
+        }
+
+        /* Intro Section */
+        .section {
+            padding: 80px 60px;
+        }
+
+        .intro {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .intro h2 {
+            font-size: 36px;
+            color: var(--primary);
+            margin-bottom: 30px;
+        }
+
+        .intro p {
+            font-size: 18px;
+            color: #555;
+        }
+
+        /* Pillars Grid */
+        .pillars {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .pillar-card {
+            background: var(--bg-light);
+            padding: 40px;
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            transition: transform 0.3s ease;
+        }
+
+        .pillar-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+
+        .pillar-icon {
+            font-size: 32px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .pillar-card h3 {
+            color: var(--primary);
+            font-size: 24px;
+            margin-top: 0;
+        }
+
+        .pillar-card p {
+            color: #666;
+            font-size: 15px;
+        }
+
+        /* Business Model */
+        .business-model {
+            background: var(--primary);
+            color: white;
+            padding: 80px 60px;
+        }
+
+        .business-model h2 {
+            color: var(--accent);
+            font-size: 36px;
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .packages {
+            display: flex;
+            gap: 30px;
+        }
+
+        .package {
+            flex: 1;
+            background: rgba(255,255,255,0.05);
+            padding: 30px;
+            border: 1px solid rgba(203, 162, 88, 0.3);
+            text-align: center;
+        }
+
+        .package h4 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .package .days {
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .package ul {
+            text-align: left;
+            list-style-type: none;
+            padding: 0;
+            font-size: 14px;
+            color: #DDD;
+        }
+
+        .package ul li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .package ul li::before {
+            content: "•";
+            color: var(--accent);
+            position: absolute;
+            left: 0;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px;
+            background: #111;
+            color: #888;
+            font-size: 14px;
+        }
+        
+        .footer strong {
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+
+<div class="page">
+    
+    <!-- Cover -->
+    <div class="cover">
+        <h3>საინვესტიციო შესაძლებლობა</h3>
+        <h1>Green Canyon Wellness</h1>
+        <p>ამიერკავკასიაში პირველი პრემიუმ კლასის ბიო-ჰაკინგ და დღეგრძელობის ცენტრი, რომელიც აერთიანებს მაღალ ტექნოლოგიებსა და ალპურ ბუნებას.</p>
+    </div>
+
+    <!-- The Vision -->
+    <div class="section">
+        <div class="intro">
+            <h2>ჯანმრთელობის მომავალი</h2>
+            <p>Green Canyon Wellness გთავაზობთ რევოლუციურ კონცეფციას, რომელიც დაფუძნებულია შვეიცარიული და ავსტრიული (Clinique La Prairie, Lanserhof) კლინიკების საუკეთესო პრაქტიკაზე. ჩვენ ვქმნით მიზიდულობის ცენტრს მაღალმხარჯველუნარიანი ეკო-ტურისტებისთვის, სადაც პრევენციული მედიცინა ხვდება 5-ვარსკვლავიან კომფორტს.</p>
+        </div>
+
+        <!-- Four Pillars -->
+        <div class="pillars">
+            <div class="pillar-card">
+                <span class="pillar-icon">🧬</span>
+                <h3>The Science</h3>
+                <p>ზუსტი დიაგნოსტიკა და ეპიგენეტიკა. სრული სამედიცინო სკრინინგი, DEXA სკანირება და გენეტიკური ტესტები ბიოლოგიური ასაკის დასადგენად.</p>
+            </div>
+            
+            <div class="pillar-card">
+                <span class="pillar-icon">⚡</span>
+                <h3>The Tech</h3>
+                <p>მაღალტექნოლოგიური ბიო-ჰაკინგი. უჯრედული აღდგენა კრიოთერაპიის, ჰიპერბარიული ჟანგბადის კამერების და პერსონალიზებული IV თერაპიის საშუალებით.</p>
+            </div>
+            
+            <div class="pillar-card">
+                <span class="pillar-icon">🌿</span>
+                <h3>The Nutrition</h3>
+                <p>დეტოქსი და მიკრობიომის აღდგენა. სრული ფოკუსი კუჭ-ნაწლავის ტრაქტზე, წმენდა და სპეციალიზებული ორგანული დიეტა ადგილობრივი პროდუქტებით.</p>
+            </div>
+            
+            <div class="pillar-card">
+                <span class="pillar-icon">🧘‍♂️</span>
+                <h3>The Mind</h3>
+                <p>ნეირო-მედიტაცია და მენტალური ოპტიმიზაცია. ძილის ხარისხის გაუმჯობესება (Sleep Lab) და სტრეს-მენეჯმენტი დაკავებული პროფესიონალებისთვის.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Business Model & Packages -->
+    <div class="business-model">
+        <h2>სერვისების სტრუქტურა</h2>
+        <div class="packages">
+            <div class="package">
+                <span class="days">3-დღიანი პროგრამა</span>
+                <h4>Executive Reset</h4>
+                <ul>
+                    <li>სტრესის სწრაფი მენეჯმენტი</li>
+                    <li>IV ვიტამინოთერაპია ენერგიისთვის</li>
+                    <li>ძილის ოპტიმიზაცია და სპა</li>
+                    <li>იდეალურია შაბათ-კვირისთვის</li>
+                </ul>
+            </div>
+            
+            <div class="package">
+                <span class="days">7-დღიანი პროგრამა</span>
+                <h4>Bio-Hack & Detox</h4>
+                <ul>
+                    <li>სხეულის სრული წმენდა</li>
+                    <li>მიკრობიომის აღდგენის დიეტა</li>
+                    <li>კრიოთერაპია და ბაროკამერა</li>
+                    <li>წონის კორექცია</li>
+                </ul>
+            </div>
+            
+            <div class="package">
+                <span class="days">14-დღიანი პროგრამა</span>
+                <h4>Ultimate Longevity</h4>
+                <ul>
+                    <li>გენეტიკური სკრინინგი</li>
+                    <li>უჯრედული გაახალგაზრდავება</li>
+                    <li>1 წლიანი ჯანმრთელობის რუკა</li>
+                    <li>მაქსიმალური პრემიუმ შედეგი</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>ინვესტიცია ჯანმრთელობასა და მომავალში. | <strong>Green Canyon 2026</strong></p>
+    </div>
+
+</div>
+
+</body>
+</html>

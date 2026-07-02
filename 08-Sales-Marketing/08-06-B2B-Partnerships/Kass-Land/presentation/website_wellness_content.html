@@ -1,0 +1,195 @@
+<!-- 
+  GREEN CANYON WELLNESS - WEBSITE SECTION
+  ეს კოდი შეგიძლიათ ჩასვათ არსებულ ვებსაიტზე (მაგალითად Index.html-ის რომელიმე სექციაში).
+  მასში გამოყენებულია დამოუკიდებელი CSS, რათა არ დააზიანოს სხვა ელემენტები.
+-->
+
+<style>
+  .gc-wellness-section {
+    font-family: 'Inter', sans-serif;
+    background-color: #F9F8F5; /* Light creamy background */
+    color: #1A1A1A;
+    padding: 100px 20px;
+    overflow: hidden;
+  }
+
+  .gc-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .gc-header {
+    text-align: center;
+    margin-bottom: 60px;
+  }
+
+  .gc-header h5 {
+    color: #CBA258; /* Gold */
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  .gc-header h2 {
+    font-size: 48px;
+    font-family: 'Playfair Display', serif;
+    color: #1F3F29; /* Forest Green */
+    margin: 0 0 20px 0;
+  }
+
+  .gc-header p {
+    font-size: 18px;
+    max-width: 700px;
+    margin: 0 auto;
+    color: #555;
+    line-height: 1.6;
+  }
+
+  .gc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    margin-bottom: 60px;
+  }
+
+  .gc-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 40px 30px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.04);
+    transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.4s ease;
+    border-top: 4px solid transparent;
+  }
+
+  .gc-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+    border-top-color: #CBA258;
+  }
+
+  .gc-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    background: #f0ebd8;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 25px auto;
+    font-size: 32px;
+    color: #1F3F29;
+  }
+
+  .gc-card h3 {
+    font-size: 22px;
+    color: #1F3F29;
+    margin-bottom: 15px;
+  }
+
+  .gc-card p {
+    font-size: 15px;
+    color: #666;
+    line-height: 1.6;
+  }
+
+  .gc-cta-banner {
+    background: #1F3F29;
+    border-radius: 16px;
+    padding: 60px;
+    text-align: center;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .gc-cta-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(203, 162, 88, 0.1) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .gc-cta-banner h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    margin: 0 0 20px 0;
+  }
+
+  .gc-btn {
+    display: inline-block;
+    background: #CBA258;
+    color: #fff;
+    padding: 16px 36px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 16px;
+    transition: background 0.3s ease, transform 0.2s ease;
+    margin-top: 10px;
+  }
+
+  .gc-btn:hover {
+    background: #b58d45;
+    transform: scale(1.05);
+  }
+
+  @media (max-width: 768px) {
+    .gc-header h2 { font-size: 36px; }
+    .gc-cta-banner { padding: 40px 20px; }
+    .gc-cta-banner h3 { font-size: 28px; }
+  }
+</style>
+
+<section class="gc-wellness-section">
+  <div class="gc-container">
+    
+    <div class="gc-header">
+      <h5>ეკო-კურორტი და ინოვაცია</h5>
+      <h2>ბიო-ჰაკინგი & დღეგრძელობა</h2>
+      <p>ამიერკავკასიაში პირველი პრემიუმ ველნეს კლინიკა, სადაც შვეიცარიული სიზუსტე და ინოვაციური მედიცინა ერწყმის დაშბაშის ალპურ ბუნებას. აღიდგინეთ ენერგია და გადაწერეთ თქვენი ბიოლოგიური ასაკი.</p>
+    </div>
+
+    <div class="gc-grid">
+      <!-- Feature 1 -->
+      <div class="gc-card">
+        <div class="gc-icon-wrapper">🧬</div>
+        <h3>დიაგნოსტიკა</h3>
+        <p>ეპიგენეტიკური ტესტები და სრული სკრინინგი უჯრედულ დონეზე, რათა შევქმნათ თქვენი ჯანმრთელობის ზუსტი რუკა.</p>
+      </div>
+      
+      <!-- Feature 2 -->
+      <div class="gc-card">
+        <div class="gc-icon-wrapper">❄️</div>
+        <h3>ბიო-ჰაკინგი</h3>
+        <p>კრიოთერაპია, ბაროკამერები და ინტრავენური (IV) თერაპია ენერგიის მყისიერი აღდგენისთვის.</p>
+      </div>
+      
+      <!-- Feature 3 -->
+      <div class="gc-card">
+        <div class="gc-icon-wrapper">🥗</div>
+        <h3>დეტოქსი</h3>
+        <p>ნაწლავის მიკრობიომის აღდგენა პერსონალიზებული კვების პროგრამით (Fasting-mimicking diet).</p>
+      </div>
+      
+      <!-- Feature 4 -->
+      <div class="gc-card">
+        <div class="gc-icon-wrapper">🧠</div>
+        <h3>ნეირო-აღდგენა</h3>
+        <p>ძილის ლაბორატორია და ნეირო-მედიტაცია სტრესისა და გადაღლილობის (Burnout) სამართავად.</p>
+      </div>
+    </div>
+
+    <div class="gc-cta-banner">
+      <h3>აღმოაჩინეთ უსაზღვრო პოტენციალი</h3>
+      <p style="color: #ddd; margin-bottom: 30px; font-size: 18px;">შემოგვიერთდით 3, 7 ან 14 დღიან პროგრამებზე.</p>
+      <a href="#contact" class="gc-btn">დაჯავშნე ვიზიტი</a>
+    </div>
+
+  </div>
+</section>

@@ -238,13 +238,25 @@
             border-radius: 8px;
             border: 1px dashed var(--border);
         }
+        
+        .sync-badge {
+            background-color: var(--accent-green);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            margin-left: 10px;
+            vertical-align: middle;
+            display: none;
+        }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
 
 <div class="calc-wrapper">
     <div class="header">
-        <h1 data-i18n="title">Detailed ROI Calculator</h1>
+        <h1><span data-i18n="title">Detailed ROI Calculator</span> <span id="sync_badge" class="sync-badge">Live</span></h1>
         <div class="langs">
             <button class="lang-btn active" onclick="setLang('ka')">KA</button>
             <button class="lang-btn" onclick="setLang('en')">EN</button>
@@ -450,6 +462,54 @@
         }
         
         setLang('ka'); // Render handles population
+        fetchLiveCSV();
+    }
+    
+    async function fetchLiveCSV() {
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQf7QPiuQrajThqiHwSQxGSQQ1nb9XEU8YHmK5atshH6VxSTb90QjZIEUGuAlImhQ/pub?output=csv";
+        const rawUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(CSV_URL);
+        try {
+            const res = await fetch(rawUrl);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const csv = await res.text();
+            Papa.parse(csv, {
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    const parseNum = (str) => {
+                        if (!str) return 0;
+                        str = String(str).replace(/\s/g, '').replace(/,/g, '.');
+                        return parseFloat(str) || 0;
+                    };
+                    results.data.forEach(row => {
+                        let id = row['ნაკვეთის კოდი'] || row['აპარტ ოტელის ნომერი'];
+                        if (!id) return;
+                        id = id.trim();
+                        if (!DATA[id] || !DATA[id].standard) return;
+                        
+                        let st = DATA[id].standard;
+                        if (row['სახლის სტილი']) st.house_style = row['სახლის სტილი'];
+                        if (row['ნაკვეთის ფართობი (მ2)']) st.land_area = parseNum(row['ნაკვეთის ფართობი (მ2)']);
+                        if (row['სახლის ფართი (მ2)']) st.house_area = parseNum(row['სახლის ფართი (მ2)']);
+                        if (row['საინვესტიცო ღირებულება']) st.total_investment = parseNum(row['საინვესტიცო ღირებულება']);
+                        
+                        st.financial = st.financial || {};
+                        if (row['ბეი - რეზერვი $']) st.financial.reservation = parseNum(row['ბეი - რეზერვი $']);
+                        if (row['პირველი შენატანი 10%']) st.financial.downpayment_10 = parseNum(row['პირველი შენატანი 10%']);
+                        if (row['ყოველთვიური (36 თვე)']) st.financial.monthly_36 = parseNum(row['ყოველთვიური (36 თვე)']);
+                        if (row['პოსტ-ჰენდოვერი (20%)']) st.financial.post_handover_20 = parseNum(row['პოსტ-ჰენდოვერი (20%)']);
+                        if (row['დღიური ქირის ფასი ($)']) st.financial.daily_rent = parseNum(row['დღიური ქირის ფასი ($)']);
+                        if (row['პესიმისტური Rental ROI %']) st.financial.roi_percent = parseNum(row['პესიმისტური Rental ROI %']);
+                        if (row['პესიმისტური უკუგება (წელი)']) st.financial.payback_years = parseNum(row['პესიმისტური უკუგება (წელი)']);
+                        if (row['სააქციო შეთავაზება 8% გარანტირებული უკუგება 2 წელი']) st.financial.promo_8_percent = parseNum(row['სააქციო შეთავაზება 8% გარანტირებული უკუგება 2 წელი']);
+                    });
+                    document.getElementById('sync_badge').style.display = 'inline-block';
+                    render();
+                }
+            });
+        } catch(err) {
+            console.error("Failed to fetch live spreadsheet data: ", err);
+        }
     }
     
     function setLang(lang) {

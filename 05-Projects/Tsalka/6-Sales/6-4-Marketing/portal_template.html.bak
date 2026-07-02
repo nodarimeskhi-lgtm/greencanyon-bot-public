@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Green Canyon — Sales Portal</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600&display=swap');
+:root {
+  --bg:#f8f7f4;--card:#fff;--primary:#3d5a3e;--primary-light:#5c7e5d;
+  --primary-pale:#eef4ee;--accent:#c8a96e;--accent-h:#b5934f;
+  --text:#2c2c2c;--muted:#7a7a7a;--border:#e0ddd7;
+  --shadow:0 4px 20px rgba(0,0,0,.07);--radius:12px;
+  --free:#27ae60;--reserved:#e67e22;--sold:#7f8c8d;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text)}
+
+/* ── TOPBAR ── */
+.topbar{
+  background:var(--primary);color:#fff;height:56px;
+  display:flex;align-items:center;padding:0 20px;gap:16px;
+  position:fixed;top:0;left:0;right:0;z-index:2000;
+  box-shadow:0 2px 12px rgba(0,0,0,.25);
+}
+.topbar-logo{font-family:'Playfair Display',serif;font-size:17px;white-space:nowrap}
+.topbar-logo span{color:var(--accent)}
+.nav-tabs{display:flex;gap:4px;flex:1}
+.nav-tab{
+  background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.8);
+  padding:7px 16px;border-radius:20px;cursor:pointer;
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:500;
+  transition:all .2s;white-space:nowrap;
+}
+.nav-tab:hover{background:rgba(255,255,255,.2);color:#fff}
+.nav-tab.active{background:var(--accent);color:#fff;font-weight:700}
+.topbar-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.lang-pill{display:flex;gap:3px}
+.lang-pill button{
+  background:rgba(255,255,255,.15);border:none;color:#fff;
+  padding:4px 9px;border-radius:16px;cursor:pointer;font-size:11px;
+  font-family:'Inter',sans-serif;transition:background .2s;
+}
+.lang-pill button.active{background:var(--accent)}
+.sync-badge{
+  display:flex;align-items:center;gap:6px;font-size:11px;
+  background:rgba(255,255,255,.1);padding:4px 10px;border-radius:16px;
+  cursor:pointer;transition:background .2s;
+}
+.sync-badge:hover{background:rgba(255,255,255,.2)}
+.dot{width:7px;height:7px;border-radius:50%}
+.dot.ok{background:#4ade80;animation:pulse 2s infinite}
+.dot.err{background:#f87171}
+.dot.loading{background:#fbbf24;animation:spin .8s linear infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── PAGES ── */
+.page{display:none;position:fixed;top:56px;left:0;right:0;bottom:0}
+.page.active{display:flex;flex-direction:column}
+
+/* ══════════════════════════════════════
+   PAGE 1 — MAP
+══════════════════════════════════════ */
+#page-map{flex-direction:row}
+#leaflet-map{flex:1;height:100%;z-index:1}
+
+.map-legend{
+  position:absolute;top:12px;left:12px;z-index:1000;
+  background:rgba(255,255,255,.96);border-radius:10px;
+  padding:12px 16px;box-shadow:0 2px 12px rgba(0,0,0,.12);font-size:12px;
+}
+.map-legend h4{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:8px}
+.leg-item{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.leg-dot{width:12px;height:12px;border-radius:50%}
+.leg-sep{border:none;border-top:1px solid var(--border);margin:8px 0}
+.leg-count{font-weight:700;color:var(--primary)}
+
+.map-panel{
+  width:300px;background:var(--card);border-left:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;z-index:1001;flex-shrink:0;
+}
+.map-panel-header{background:var(--primary);color:#fff;padding:16px 18px;flex-shrink:0}
+.map-panel-header h3{font-family:'Playfair Display',serif;font-size:15px;margin-bottom:4px}
+.map-panel-header p{font-size:11px;opacity:.75}
+.map-panel-body{padding:16px;flex:1;overflow-y:auto}
+.map-no-sel{text-align:center;padding:40px 16px;color:var(--muted)}
+.map-no-sel .icon{font-size:40px;margin-bottom:12px;opacity:.3}
+.plot-id{font-size:18px;font-weight:700;color:var(--primary);margin-bottom:4px}
+.plot-zone-tag{
+  display:inline-block;padding:2px 10px;border-radius:12px;
+  font-size:11px;font-weight:700;margin-bottom:14px;
+}
+.tag-LA{background:#d6eaf8;color:#1a5276}
+.tag-LB{background:#d5f5e3;color:#1a7a3f}
+.tag-LC{background:#f9ebea;color:#922b21}
+.tag-LD{background:#fef9e7;color:#9a7d0a}
+.tag-AH{background:#f4ecf7;color:#6c3483}
+
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13px}
+.info-row .lbl{color:var(--muted)}
+.info-row .val{font-weight:600;color:var(--text)}
+.status-box{border-radius:8px;padding:10px 14px;text-align:center;margin:12px 0}
+.status-box.free    {background:#d5f5e3;color:#1a7a3f}
+.status-box.reserved{background:#fdebd0;color:#a04000}
+.status-box.sold    {background:#eaecee;color:#5d6d7e}
+.status-box .stxt{font-size:14px;font-weight:700}
+.mini-roi{background:var(--primary-pale);border:1px solid var(--primary);border-radius:10px;padding:14px;margin-top:12px;text-align:center}
+.mini-roi .r{font-size:28px;font-weight:800;color:var(--primary)}
+.mini-roi .rl{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px}
+.mini-roi .profit{font-size:15px;font-weight:700;color:var(--accent-h);margin-top:6px}
+.go-inv-btn{
+  width:100%;margin-top:14px;padding:10px;background:var(--primary);color:#fff;
+  border:none;border-radius:8px;cursor:pointer;font-weight:600;
+  font-family:'Inter',sans-serif;font-size:13px;transition:background .2s;
+}
+.go-inv-btn:hover{background:var(--primary-light)}
+
+/* ══════════════════════════════════════
+   PAGE 2 — INVENTORY
+══════════════════════════════════════ */
+#page-inv{overflow:hidden}
+.inv-wrapper{display:flex;flex:1;gap:0;overflow:hidden;height:100%}
+
+/* STATS BAR */
+.stats-bar{
+  display:flex;gap:0;border-bottom:1px solid var(--border);
+  background:var(--card);flex-shrink:0;flex-wrap:wrap;
+}
+.stat{
+  flex:1;min-width:130px;padding:12px 18px;border-right:1px solid var(--border);
+  text-align:center;
+}
+.stat .sv{font-size:22px;font-weight:700;color:var(--primary)}
+.stat.g .sv{color:#27ae60}.stat.o .sv{color:#e67e22}
+.stat.gr .sv{color:#7f8c8d}.stat.gd .sv{color:var(--accent-h)}
+.stat .sl{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:2px}
+
+/* LEFT PANEL — Table */
+.inv-left{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.inv-panel{background:var(--card);border-radius:0;box-shadow:none;flex:1;display:flex;flex-direction:column;overflow:hidden}
+.panel-header{
+  padding:12px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0;flex-wrap:wrap;
+}
+.panel-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--primary)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filter-select,.search-box{
+  font-family:'Inter',sans-serif;font-size:12px;
+  border:1px solid var(--border);border-radius:8px;
+  padding:6px 10px;background:var(--bg);color:var(--text);
+  cursor:pointer;outline:none;transition:border .2s;
+}
+.filter-select:focus,.search-box:focus{border-color:var(--primary)}
+.search-box{width:160px}
+.table-wrap{overflow:auto;flex:1}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{
+  background:var(--primary);color:#fff;padding:10px 12px;
+  text-align:left;font-weight:600;font-size:11px;
+  text-transform:uppercase;letter-spacing:.4px;
+  white-space:nowrap;cursor:pointer;user-select:none;position:sticky;top:0;z-index:5;
+}
+thead th:hover{background:var(--primary-light)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .15s;cursor:pointer}
+tbody tr:hover{background:var(--primary-pale)}
+tbody tr.sel{background:#ddeedd;border-left:3px solid var(--primary)}
+tbody td{padding:9px 12px;vertical-align:middle;white-space:nowrap}
+.badge{display:inline-block;padding:2px 9px;border-radius:14px;font-size:10px;font-weight:700}
+.badge-free    {background:#d5f5e3;color:#1a7a3f}
+.badge-reserved{background:#fdebd0;color:#a04000}
+.badge-sold    {background:#eaecee;color:#5d6d7e}
+.zpill{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700}
+.z-LA{background:#d6eaf8;color:#1a5276}.z-LB{background:#d5f5e3;color:#1a7a3f}
+.z-LC{background:#f9ebea;color:#922b21}.z-LD{background:#fef9e7;color:#9a7d0a}
+.z-AH{background:#f4ecf7;color:#6c3483}
+.pag{display:flex;gap:5px;justify-content:flex-end;padding:10px 16px;align-items:center;border-top:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+.pb{background:var(--card);border:1px solid var(--border);color:var(--text);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;font-family:'Inter',sans-serif;transition:all .2s}
+.pb:hover,.pb.act{background:var(--primary);color:#fff;border-color:var(--primary)}
+.pi{font-size:11px;color:var(--muted)}
+.empty{text-align:center;padding:40px;color:var(--muted)}
+
+/* RIGHT PANEL — Calculators */
+.inv-right{
+  width:300px;border-left:1px solid var(--border);background:var(--card);
+  display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;
+}
+.calc-section{padding:14px 16px;border-bottom:1px solid var(--border)}
+.calc-section h4{font-family:'Playfair Display',serif;font-size:14px;color:var(--primary);margin-bottom:10px}
+.sel-info{background:var(--primary-pale);border-radius:8px;padding:10px;margin-bottom:12px}
+.sel-id{font-weight:700;color:var(--primary);font-size:15px}
+.sel-type{font-size:11px;color:var(--muted);margin-top:2px}
+.fl{margin-bottom:10px}
+.fl label{display:block;font-size:10px;font-weight:600;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px}
+.ni{padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;width:100%;background:var(--bg);color:var(--text);outline:none;font-family:'Inter',sans-serif;transition:border .2s}
+.ni:focus{border-color:var(--primary)}
+.ni[readonly]{background:#f0f0ee;color:var(--muted)}
+.sr{display:flex;align-items:center;gap:8px}
+.sr input{flex:1;accent-color:var(--primary)}
+.slbl{font-size:13px;font-weight:700;color:var(--primary);min-width:36px;text-align:right}
+.res{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.rb{background:var(--primary);border-radius:9px;padding:12px 8px;color:#fff;text-align:center}
+.rb.gold{background:var(--accent-h)}
+.rl2{font-size:9px;opacity:.8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.rv{font-size:18px;font-weight:700}
+.comm-box{background:linear-gradient(135deg,#2c5f2e,#3d7a40);border-radius:9px;padding:14px;color:#fff;margin-top:8px}
+.comm-box .ct{font-size:10px;opacity:.8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.comm-box .cv{font-size:22px;font-weight:700;color:#a8d5aa}
+.comm-box .cs{font-size:11px;opacity:.75;margin-top:2px}
+.cr-row{display:flex;align-items:center;gap:7px;margin-top:8px}
+.cr-row label{font-size:11px;opacity:.85}
+.cr-row input{flex:1;accent-color:#a8d5aa}
+.crlbl{font-size:12px;font-weight:700;min-width:32px;text-align:right}
+.sheets-link-btn{
+  width:100%;padding:9px;background:var(--primary-pale);
+  border:1px solid var(--primary);border-radius:8px;cursor:pointer;
+  font-family:'Inter',sans-serif;color:var(--primary);font-weight:600;
+  font-size:12px;transition:all .2s;margin-top:6px;
+}
+.sheets-link-btn:hover{background:var(--primary);color:#fff}
+.src-info{font-size:11px;color:var(--muted);line-height:1.6;margin-top:6px}
+.src-info strong{color:var(--primary)}
+@media(max-width:1000px){
+  .map-panel{width:260px}
+  .inv-wrapper{flex-direction:column;overflow-y:auto;display:block}
+  .inv-left{height:450px;flex:none}
+  .inv-right{width:100%;border-left:none;border-top:1px solid var(--border);display:flex;flex:none}
+}
+@media(max-width:700px){
+  .nav-tab span{display:none}
+  #page-map{flex-direction:column}
+  .map-panel{width:100%;border-left:none;border-top:1px solid var(--border);height:40%;max-height:40%}
+  .map-legend{top:auto;bottom:12px;left:12px;transform:scale(0.85);transform-origin:bottom left}
+}
+@media(max-width:600px){
+  .topbar { padding: 0 6px; gap: 4px; }
+  .topbar-logo { font-size: 13px; }
+  .nav-tabs { gap: 2px; }
+  .nav-tab { padding: 6px 8px; font-size: 11px; }
+  .sync-badge span { display: none; }
+  .sync-badge { padding: 4px 6px; gap: 0; }
+  .lang-pill button { padding: 4px 6px; font-size: 10px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── TOPBAR ── -->
+<div class="topbar">
+  <div class="topbar-logo">GREEN <span>CANYON</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('map')" id="tab-map">🗺️ <span data-i18n="tab_map">ინტ. რუქა</span></button>
+    <button class="nav-tab" onclick="showPage('inv')" id="tab-inv">📊 <span data-i18n="tab_inv">ინვენტარი</span></button>
+  </div>
+  <div class="topbar-right">
+    <div class="sync-badge" onclick="manualRefresh()" id="sync-badge">
+      <div class="dot ok" id="sync-dot"></div>
+      <span id="sync-lbl" data-i18n="ready">მზადაა</span>
+    </div>
+    <div class="lang-pill">
+      <button class="active" onclick="setLang('ka')">ქართ</button>
+      <button onclick="setLang('en')">EN</button>
+      <button onclick="setLang('ru')">RU</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE 1: MAP ══ -->
+<div class="page active" id="page-map">
+  <div id="leaflet-map"></div>
+
+  <div class="map-legend" id="map-legend">
+    <h4 data-i18n="status_lbl">სტატუსი</h4>
+    <div class="leg-item"><div class="leg-dot" style="background:#27ae60"></div><span data-i18n="st_free_full">ხელმისაწვდომი</span> <span class="leg-count" id="lc-free">—</span></div>
+    <div class="leg-item"><div class="leg-dot" style="background:#e67e22"></div><span data-i18n="st_res_full">დაჯავშნილი</span> <span class="leg-count" id="lc-res">—</span></div>
+    <div class="leg-item"><div class="leg-dot" style="background:#7f8c8d"></div><span data-i18n="st_sold_full">გაყიდული</span> <span class="leg-count" id="lc-sold">—</span></div>
+    <hr class="leg-sep">
+    <div class="leg-item"><div class="leg-dot" style="background:#a24035;border-radius:2px"></div><span data-i18n="zone_la">LA — კანიონის პირი</span></div>
+    <div class="leg-item"><div class="leg-dot" style="background:#4a8f4e;border-radius:2px"></div><span data-i18n="zone_lb">LB — ველის კვარტალი</span></div>
+    <div class="leg-item"><div class="leg-dot" style="background:#6e7160;border-radius:2px"></div><span data-i18n="zone_lc">LC — ველის უბანი</span></div>
+    <div class="leg-item"><div class="leg-dot" style="background:#a1b5a9;border-radius:2px"></div><span data-i18n="zone_ld">LD — ხეობის ზოლი</span></div>
+  </div>
+
+  <div class="map-panel">
+    <div class="map-panel-header">
+      <h3>📍 ნაკვეთის ინფო</h3>
+      <p>დააჭირეთ ნებისმიერ მარკერს</p>
+    </div>
+    <div class="map-panel-body" id="map-panel-body">
+      <div class="map-no-sel">
+        <div class="icon">📍</div>
+        <p style="font-size:13px">რუქაზე ნებისმიერ მარკერს დააჭირეთ</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE 2: INVENTORY ══ -->
+<div class="page" id="page-inv">
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat"><div class="sl">სულ</div><div class="sv" id="st-total">—</div></div>
+    <div class="stat g"><div class="sl">ხელმისაწვდომი</div><div class="sv" id="st-free">—</div></div>
+    <div class="stat o"><div class="sl">დაჯავშნილი</div><div class="sv" id="st-res">—</div></div>
+    <div class="stat gr"><div class="sl">გაყიდული</div><div class="sv" id="st-sold">—</div></div>
+    <div class="stat gd"><div class="sl">პორტფელი</div><div class="sv" id="st-val">—</div></div>
+  </div>
+
+  <div class="inv-wrapper">
+    <!-- LEFT: TABLE -->
+    <div class="inv-left">
+      <div class="inv-panel">
+        <div class="panel-header">
+          <div class="panel-title">ინვენტარი</div>
+          <div class="filters">
+            <input type="text" class="search-box" id="s-q" placeholder="🔍 ID ან სტილი..." oninput="applyFilters()">
+            <select class="filter-select" id="s-zone" onchange="applyFilters()">
+              <option value="all" data-i18n="all_zones">ყველა ზონა</option>
+              <option value="LA" data-i18n="zone_la">LA — კანიონის პირი</option>
+              <option value="LB" data-i18n="zone_lb">LB — ველის კვარტალი</option>
+              <option value="LC" data-i18n="zone_lc">LC — ველის უბანი</option>
+              <option value="LD" data-i18n="zone_ld">LD — ხეობის ზოლი</option>
+              <option value="AH" data-i18n="zone_ah">AH — Apart Hotel</option>
+            </select>
+            <select class="filter-select" id="s-status" onchange="applyFilters()">
+              <option value="all" data-i18n="all_stat">ყველა სტ.</option>
+              <option value="free" data-i18n="st_free">ხელმ.</option>
+              <option value="reserved" data-i18n="st_res">დაჯავ.</option>
+              <option value="sold" data-i18n="st_sold">გაყ.</option>
+            </select>
+            <select class="filter-select" id="s-type" onchange="applyFilters()">
+              <option value="all" data-i18n="all_types">ყველა ტიპი</option>
+              <option value="Modern Flat-Roof">Modern Flat-Roof</option>
+              <option value="Barnhouse">Barnhouse</option>
+              <option value="A-Frame">A-Frame</option>
+              <option value="Barn 55">Barn 55m²</option>
+              <option value="Barn 85">Barn 85m²</option>
+              <option value="Barn 115">Barn 115m²</option>
+              <option value="Studio 35m²">Studio 35m²</option>
+              <option value="Junior Suite 50m²">Junior Suite 50m²</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th onclick="sortT('id')">ID ↕</th>
+              <th>ზონა</th>
+              <th onclick="sortT('sqm')">სახლი ↕</th>
+              <th onclick="sortT('area')">ნაკვეთი ↕</th>
+              <th>ტიპი</th>
+              <th onclick="sortT('price')">ფასი ↕</th>
+              <th onclick="sortT('roi')">ROI ↕</th>
+              <th>სტ.</th>
+              <th>შენიშვ.</th>
+            </tr></thead>
+            <tbody id="inv-tbody"></tbody>
+          </table>
+        </div>
+        <div class="pag" id="pag"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: CALCULATORS -->
+    <div class="inv-right">
+      <!-- ROI Calculator -->
+      <div class="calc-section">
+        <h4>ROI კალკულატორი</h4>
+        <div class="sel-info">
+          <div class="sel-id" id="ci-id">← ნაკვეთი მოირჩიეთ</div>
+          <div class="sel-type" id="ci-type"></div>
+        </div>
+        <div class="fl">
+          <label>ჯამური ფასი (CAPEX)</label>
+          <div style="position:relative">
+            <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:#aaa;font-size:13px">$</span>
+            <input class="ni" type="number" id="c-capex" readonly style="padding-left:20px">
+          </div>
+        </div>
+        <div class="fl">
+          <label>დღიური ქირა ($)</label>
+          <input class="ni" type="number" id="c-rent" min="50" max="2000" oninput="recalc()">
+        </div>
+        <div class="fl">
+          <label>დატვირთულობა</label>
+          <div class="sr">
+            <input type="range" id="c-occ" min="20" max="85" value="45" oninput="recalc()">
+            <span class="slbl" id="occ-l">45%</span>
+          </div>
+        </div>
+        <div class="fl">
+          <label>მართვის საკ.</label>
+          <div class="sr">
+            <input type="range" id="c-mgmt" min="20" max="50" value="40" oninput="recalc()">
+            <span class="slbl" id="mgmt-l">40%</span>
+          </div>
+        </div>
+        <div class="res">
+          <div class="rb"><div class="rl2">წლ. შემ.</div><div class="rv" id="r-inc">$0</div></div>
+          <div class="rb gold"><div class="rl2">ROI %</div><div class="rv" id="r-roi">0%</div></div>
+          <div class="rb" style="background:#1a4a1c"><div class="rl2">უკუγება</div><div class="rv" id="r-pb">0წ</div></div>
+          <div class="rb" style="background:#5c4000"><div class="rl2">ბრუტო</div><div class="rv" id="r-gr">$0</div></div>
+        </div>
+      </div>
+
+      <!-- Commission -->
+      <div class="calc-section">
+        <h4>კომისია</h4>
+        <div class="comm-box">
+          <div class="ct">შენი კომისია</div>
+          <div class="cv" id="comm-v">$0</div>
+          <div class="cs" id="comm-d">— ობიექტი მოირჩიეთ —</div>
+          <div class="cr-row">
+            <label>კომ. %:</label>
+            <input type="range" id="comm-r" min="1" max="6" value="3" step=".5" oninput="recalc()">
+            <span class="crlbl" id="comm-rl">3%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Source -->
+      <div class="calc-section">
+        <h4>📡 მონაცემთა წყარო</h4>
+        <div class="src-info" id="src-info">
+          <strong>წყარო:</strong> ჩაშენებული<br>
+          <strong>განახ.:</strong> <span id="last-sync">—</span><br>
+          <strong>ობიექტი:</strong> 271
+        </div>
+        <button class="sheets-link-btn" onclick="openSheetsModal()">
+          📊 Google Sheets კავშირი
+        </button>
+        <button class="sheets-link-btn" onclick="manualRefresh()" style="margin-top:6px">
+          🔄 ახლავე განახლება
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SHEETS SETUP MODAL -->
+<div id="sheets-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:3000;align-items:center;justify-content:center">
+  <div style="background:white;border-radius:16px;padding:28px;max-width:520px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <h2 style="font-family:'Playfair Display',serif;color:var(--primary);margin-bottom:8px">📊 Google Sheets კავშირი</h2>
+    <p style="color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:16px">
+      Google Sheets-ში სტატუსის შეცვლა ავტომატურად განახლდება Dashboard-ზე.
+    </p>
+    <div style="background:#f8f7f4;border-radius:10px;padding:16px;margin-bottom:16px;font-size:13px">
+      <strong style="color:var(--primary)">ნაბიჯები:</strong><br><br>
+      1️⃣ <a href="#" onclick="return false" style="color:var(--primary)">green_canyon_inventory.csv</a> Google Sheets-ში ატვირთეთ<br>
+      2️⃣ <strong>File → Share → Publish to web → Sheet1 → CSV → Publish</strong><br>
+      3️⃣ URL ჩასვით ქვევით
+    </div>
+    <div style="display:flex;gap:8px">
+      <input type="text" id="sheets-url" placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv"
+        style="flex:1;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:'Inter',sans-serif;outline:none">
+      <button onclick="connectSheets()" style="background:var(--primary);color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700;font-family:'Inter',sans-serif">
+        🔗 კავშირი
+      </button>
+    </div>
+    <button onclick="closeSheetsModal()" style="margin-top:12px;width:100%;background:none;border:1px solid var(--border);border-radius:8px;padding:9px;cursor:pointer;color:var(--muted);font-family:'Inter',sans-serif">
+      დახურვა
+    </button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// EMBEDDED DATA — from Settlement Excel
+// ═══════════════════════════════════════
+INVENTORY_PLACEHOLDER
+
+// ═══════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════
+  const CFG = {
+    sheetsUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQf7QPiuQrajThqiHwSQxGSQQ1nb9XEU8YHmK5atshH6VxSTb90QjZIEUGuAlImhQ/pub?output=csv',
+    pageSize: 20,
+    refreshMs: 5 * 60 * 1000
+  };
+const MAP_IMG = './masterplan_leaflet.jpg';
+const MAP_BOUNDS = [[0,0],[2383.94,1683.78]];
+const ZONE_COLORS = {LA:'#a24035',LB:'#4a8f4e',LC:'#6e7160',LD:'#a1b5a9'};
+const STATUS_COLORS = {free:'#27ae60',reserved:'#e67e22',sold:'#7f8c8d'};
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let PLOTS = [...INVENTORY];
+let filtered = [...PLOTS];
+let sortKey = 'id'; let sortAsc = true;
+let curPage = 1;
+let selPlot = null;
+let leafletMap = null;
+let markers = {};
+
+// ═══════════════════════════════════════
+// PAGE NAV
+// ═══════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+  if (id === 'map') {
+    setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 100);
+  }
+}
+
+// ═══════════════════════════════════════
+// LEAFLET MAP
+// ═══════════════════════════════════════
+function initMap() {
+  leafletMap = L.map('leaflet-map', {
+    crs: L.CRS.Simple, minZoom: -2, maxZoom: 2, zoomSnap: 0.1,
+    attributionControl: false
+  });
+
+  L.imageOverlay(MAP_IMG, MAP_BOUNDS).addTo(leafletMap);
+  leafletMap.fitBounds(MAP_BOUNDS);
+
+  renderMapMarkers();
+  setTimeout(() => { leafletMap.invalidateSize(); leafletMap.fitBounds(MAP_BOUNDS); }, 800);
+}
+
+function markerColor(p) {
+  return STATUS_COLORS[p.status] || '#888';
+}
+function markerBorder(p) {
+  return ZONE_COLORS[p.zone] || '#fff';
+}
+
+function renderMapMarkers() {
+  // Clear old markers
+  Object.values(markers).forEach(m => m.remove());
+  markers = {};
+
+  const mapPlots = PLOTS.filter(p => p.latlng);
+
+  mapPlots.forEach(p => {
+    const sc = markerColor(p);
+    const bc = markerBorder(p);
+    const num = p.id.split('-').slice(1).join('-');
+
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="
+        width:26px;height:26px;border-radius:50%;
+        background:${sc};border:2.5px solid ${bc};
+        display:flex;align-items:center;justify-content:center;
+        color:#fff;font-weight:700;font-size:9px;
+        box-shadow:0 2px 6px rgba(0,0,0,.4);
+        cursor:pointer;transition:transform .15s;
+        " data-id="${p.id}">${num}</div>`,
+      iconSize: [26,26], iconAnchor: [13,13]
+    });
+
+    const marker = L.marker(p.latlng, { icon }).addTo(leafletMap);
+    marker.on('click', () => selectFromMap(p.id));
+    markers[p.id] = marker;
+  });
+
+  updateLegendCounts();
+}
+
+function updateLegendCounts() {
+  const mapPlots = PLOTS.filter(p => p.latlng);
+  document.getElementById('lc-free').textContent  = mapPlots.filter(p => p.status === 'free').length;
+  document.getElementById('lc-res').textContent   = mapPlots.filter(p => p.status === 'reserved').length;
+  document.getElementById('lc-sold').textContent  = mapPlots.filter(p => p.status === 'sold').length;
+}
+
+function selectFromMap(pid) {
+  const p = PLOTS.find(x => x.id === pid);
+  if (!p) return;
+  selPlot = p;
+
+  // Pulse selected marker
+  Object.keys(markers).forEach(id => {
+    const el = markers[id].getElement();
+    if (!el) return;
+    const div = el.querySelector('div');
+    if (!div) return;
+    div.style.transform = id === pid ? 'scale(1.4)' : 'scale(1)';
+    div.style.zIndex = id === pid ? '2000' : '';
+    div.style.boxShadow = id === pid ? '0 0 14px rgba(0,0,0,.7)' : '0 2px 6px rgba(0,0,0,.4)';
+  });
+
+  renderMapPanel(p);
+  fillCalc(p);
+}
+
+function renderMapPanel(p) {
+  const price = calcPrice(p);
+  const roi = calcROI(p);
+  const zTag = `tag-${p.zone}`;
+  const stKey = p.status === 'reserved' ? 'res' : p.status;
+  const sTxt = t('status_' + stKey) || p.status;
+  const sCls = p.status;
+
+  let styledHouse = p.style;
+  if (LANG === 'en') {
+    styledHouse = styledHouse.replace('(მაღალი ამონაგები)', '(High Return)');
+  } else if (LANG === 'ru') {
+    styledHouse = styledHouse.replace('(მაღალი ამონაგები)', '(Высокая доходность)');
+  }
+
+  document.getElementById('map-panel-body').innerHTML = `
+    <div class="plot-id">${p.id}</div>
+    <span class="plot-zone-tag ${zTag}">${p.zone} ${t('th_zone')}</span>
+    ${p.notes ? `<p style="font-size:12px;color:var(--muted);margin-bottom:10px">${p.notes}</p>` : ''}
+    <div class="status-box ${sCls}"><div class="stxt">${sTxt}</div></div>
+    <div class="info-row"><span class="lbl">${t('house')}</span><span class="val">${p.sqm} m²</span></div>
+    ${p.zone !== 'AH' ? `<div class="info-row"><span class="lbl">${t('plot_area')}</span><span class="val">${p.area} m²</span></div>` : ''}
+    <div class="info-row"><span class="lbl">${t('style')}</span><span class="val">${styledHouse}</span></div>
+    <div class="info-row"><span class="lbl">${t('price')}</span><span class="val" style="color:var(--accent-h)">$${price.toLocaleString()}</span></div>
+    <div class="info-row"><span class="lbl">${t('daily_rent')}</span><span class="val">$${p.daily_rent}</span></div>
+    <div class="mini-roi">
+      <div class="rl">${t('roi_annual')}</div>
+      <div class="r">${roi.toFixed(1)}%</div>
+      <div class="profit">${t('annual_inc')}: $${Math.round(price * roi / 100).toLocaleString()}</div>
+    </div>
+    <button class="go-inv-btn" onclick="goToInventory('${p.id}')">${t('go_inv')}</button>
+  `;
+}
+
+function goToInventory(pid) {
+  showPage('inv');
+  const p = PLOTS.find(x => x.id === pid);
+  if (p) { selPlot = p; fillCalc(p); applyFilters(); }
+}
+
+// ═══════════════════════════════════════
+// INVENTORY TABLE
+// ═══════════════════════════════════════
+function calcPrice(p) {
+  if (p.ah_price) return p.ah_price;
+  return Math.round(p.area * p.land_price + p.sqm * p.build_cost);
+}
+function calcROI(p, occ=.45, mgmt=.40) {
+  const cp = calcPrice(p), gr = p.daily_rent * 365 * occ;
+  const net = gr * (1-mgmt) * .82;
+  return cp > 0 ? (net/cp*100) : 0;
+}
+
+function updateStats() {
+  const free = PLOTS.filter(p=>p.status==='free').length;
+  const res  = PLOTS.filter(p=>p.status==='reserved').length;
+  const sold = PLOTS.filter(p=>p.status==='sold').length;
+  const val  = PLOTS.filter(p=>p.status==='free').reduce((s,p)=>s+calcPrice(p),0);
+  document.getElementById('st-total').textContent = PLOTS.length;
+  document.getElementById('st-free').textContent  = free;
+  document.getElementById('st-res').textContent   = res;
+  document.getElementById('st-sold').textContent  = sold;
+  document.getElementById('st-val').textContent   = '$'+Math.round(val/1000)+'K';
+}
+
+function applyFilters() {
+  const zone   = document.getElementById('s-zone').value;
+  const status = document.getElementById('s-status').value;
+  const type   = document.getElementById('s-type').value;
+  const q      = (document.getElementById('s-q').value||'').toLowerCase();
+
+  filtered = PLOTS.filter(p => {
+    if (zone   !== 'all' && p.zone   !== zone)   return false;
+    if (status !== 'all' && p.status !== status) return false;
+    if (type   !== 'all' && p.style  !== type)   return false;
+    if (q && !p.id.toLowerCase().includes(q) && !p.style.toLowerCase().includes(q) && !(p.notes||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  curPage = 1;
+  sortAndRender();
+}
+
+function sortT(key) {
+  if (sortKey === key) sortAsc = !sortAsc;
+  else { sortKey = key; sortAsc = true; }
+  sortAndRender();
+}
+
+function sortAndRender() {
+  filtered.sort((a,b) => {
+    let va, vb;
+    if (sortKey==='price') {va=calcPrice(a);vb=calcPrice(b);}
+    else if (sortKey==='roi') {va=calcROI(a);vb=calcROI(b);}
+    else { va=a[sortKey]; vb=b[sortKey]; }
+    if (typeof va==='string') return sortAsc?va.localeCompare(vb):vb.localeCompare(va);
+    return sortAsc?va-vb:vb-va;
+  });
+  renderTable();
+}
+
+function renderTable() {
+  const tbody = document.getElementById('inv-tbody');
+  tbody.innerHTML = '';
+  const start = (curPage-1)*CFG.pageSize;
+  const page  = filtered.slice(start, start+CFG.pageSize);
+
+  if (!page.length) {
+    tbody.innerHTML = '<tr><td colspan="9"><div class="empty">🏡 ვერ მოიძებნა</div></td></tr>';
+    renderPag();
+    return;
+  }
+
+  page.forEach(p => {
+    const price = calcPrice(p);
+    const roi   = calcROI(p).toFixed(1);
+    const tr    = document.createElement('tr');
+    if (selPlot && selPlot.id === p.id) tr.classList.add('sel');
+    const bc = p.status==='free'?'badge-free':p.status==='reserved'?'badge-reserved':'badge-sold';
+    const bt = p.status==='free'?'ხელმ.':p.status==='reserved'?'დაჯავ.':'გაყ.';
+    const zc = 'z-'+p.zone;
+    let styledTable = p.style;
+    if (LANG === 'en') {
+      styledTable = styledTable.replace('(მაღალი ამონაგები)', '(High Return)');
+    } else if (LANG === 'ru') {
+      styledTable = styledTable.replace('(მაღალი ამონაგები)', '(Высокая доходность)');
+    }
+
+    tr.innerHTML = `
+      <td><strong>${p.id}</strong></td>
+      <td><span class="zpill ${zc}">${p.zone}</span></td>
+      <td>${p.sqm}m²</td>
+      <td>${p.zone==='AH'?'—':p.area+'m²'}</td>
+      <td style="font-size:11px;color:#555">${styledTable}</td>
+      <td><strong style="color:var(--accent-h)">$${price.toLocaleString()}</strong></td>
+      <td style="color:${parseFloat(roi)>10?'#1a7a3f':'#888'};font-weight:600">${roi}%</td>
+      <td><span class="badge ${bc}">${bt}</span></td>
+      <td style="font-size:11px;color:var(--muted);max-width:100px;overflow:hidden;text-overflow:ellipsis">${p.notes||''}</td>
+    `;
+    tr.addEventListener('click', () => { selPlot=p; fillCalc(p); renderTable(); });
+    tbody.appendChild(tr);
+  });
+  renderPag();
+}
+
+function renderPag() {
+  const pag   = document.getElementById('pag');
+  const total = Math.ceil(filtered.length/CFG.pageSize);
+  pag.innerHTML = `<span class="pi">${filtered.length} ჩანაწ.</span>`;
+  for (let i=1;i<=total;i++) {
+    const btn=document.createElement('button');
+    btn.className='pb'+(i===curPage?' act':'');
+    btn.textContent=i;
+    btn.onclick=()=>{curPage=i;renderTable();};
+    pag.appendChild(btn);
+  }
+}
+
+// ═══════════════════════════════════════
+// CALCULATORS
+// ═══════════════════════════════════════
+function fillCalc(p) {
+  const price = calcPrice(p);
+  document.getElementById('ci-id').textContent   = p.id;
+  document.getElementById('ci-type').textContent = p.style + (p.zone!=='AH' ? ' | '+p.area+'m² ნაკვ.' : ' | Apart Hotel') + (p.notes?' | '+p.notes:'');
+  document.getElementById('c-capex').value = price;
+  document.getElementById('c-rent').value  = p.daily_rent;
+  recalc();
+}
+
+function recalc() {
+  const capex = parseFloat(document.getElementById('c-capex').value)||0;
+  const rent  = parseFloat(document.getElementById('c-rent').value)||0;
+  const occ   = parseFloat(document.getElementById('c-occ').value)/100;
+  const mgmt  = parseFloat(document.getElementById('c-mgmt').value)/100;
+  const crate = parseFloat(document.getElementById('comm-r').value)/100;
+
+  document.getElementById('occ-l').textContent    = Math.round(occ*100)+'%';
+  document.getElementById('mgmt-l').textContent   = Math.round(mgmt*100)+'%';
+  document.getElementById('comm-rl').textContent  = (crate*100)+'%';
+
+  const gross = rent*365*occ;
+  const net   = gross*(1-mgmt)*.82;
+  const roi   = capex>0?(net/capex*100):0;
+  const pb    = net>0?(capex/net):0;
+  const comm  = capex*crate;
+
+  document.getElementById('r-gr').textContent  = '$'+Math.round(gross).toLocaleString();
+  document.getElementById('r-inc').textContent = '$'+Math.round(net).toLocaleString();
+  document.getElementById('r-roi').textContent = roi.toFixed(1)+'%';
+  document.getElementById('r-pb').textContent  = pb.toFixed(1)+'წ';
+  document.getElementById('comm-v').textContent = '$'+Math.round(comm).toLocaleString();
+  document.getElementById('comm-d').textContent = `${(crate*100)}% × $${capex.toLocaleString()}`;
+}
+
+['c-occ','c-mgmt','comm-r','c-rent'].forEach(id=>document.getElementById(id).addEventListener('input',recalc));
+
+// ═══════════════════════════════════════
+// I18N — TRANSLATIONS
+// ═══════════════════════════════════════
+const I18N = {
+  ka: {
+    tab_map:'ინტ. რუქა', tab_inv:'ინვენტარი',
+    ready:'მზადაა', syncing:'სინქ...', sync_ok:'Sheets ✓', sync_err:'შეცდომა',
+    status_lbl:'სტატუსი',
+    st_free:'ხელმ.', st_res:'დაჯავ.', st_sold:'გაყ.',
+    st_free_full:'ხელმისაწვდომი', st_res_full:'დაჯავშნილი', st_sold_full:'გაყიდული',
+    all_zones:'ყველა ზონა', all_stat:'ყველა სტ.', all_types:'ყველა ტიპი',
+    zone_la:'LA — კანიონის პირი', zone_lb:'LB — ველის კვარტალი', zone_lc:'LC — ველის უბანი', zone_ld:'LD — ხეობის ზოლი', zone_ah:'AH — Apart Hotel',
+    inv_title:'ინვენტარი', search_ph:'🔍 ID ან სტილი...',
+    total:'სულ', avail:'ხელმისაწვდომი', reserved:'დაჯავშნილი', sold:'გაყიდული', portfolio:'პორტფელი',
+    th_id:'ID', th_zone:'ზონა', th_house:'სახლი', th_plot:'ნაკვეთი',
+    th_type:'ტიპი', th_price:'ფასი', th_roi:'ROI', th_st:'სტ.', th_note:'შენიშვ.',
+    calc_title:'ROI კალკულატორი', no_sel:'← ნაკვეთი მოირჩიეთ',
+    capex_lbl:'ჯამური ფასი (CAPEX)', rent_lbl:'დღიური ქირა ($)',
+    occ_lbl:'დატვირთულობა', mgmt_lbl:'მართვის საკ.',
+    income_lbl:'წლ. შემ.', payback_lbl:'უკუგება', gross_lbl:'ბრუტო',
+    comm_title:'კომისია', your_comm:'შენი კომისია', comm_rate:'კომ. %:',
+    src_title:'📡 მონაცემები', src_embedded:'ჩაშენებული', sheets_btn:'📊 Google Sheets კავშირი',
+    refresh_btn:'🔄 ახლავე განახლება', records:'ჩანაწ.',
+    map_info:'📍 ნაკვეთის ინფო', map_click:'დააჭირეთ ნებისმიერ მარკერს',
+    map_prompt:'რუქაზე ნებისმიერ მარკერს დააჭირეთ',
+    house:'სახლი', plot_area:'ნაკვეთი', style:'სტილი', price:'ფასი',
+    daily_rent:'დღ. ქირა', roi_annual:'ROI (წლიური)', annual_inc:'წლ. შემ.',
+    go_inv:'📊 ინვენტარის ცხრილში ნახვა',
+    status_free:'✅ ხელმისაწვდომი', status_res:'🟡 დაჯავშნილი', status_sold:'⬛ გაყიდული',
+  },
+  en: {
+    tab_map:'Interactive Map', tab_inv:'Inventory',
+    ready:'Ready', syncing:'Syncing...', sync_ok:'Sheets ✓', sync_err:'Error',
+    status_lbl:'Status',
+    st_free:'Avail.', st_res:'Reserv.', st_sold:'Sold',
+    st_free_full:'Available', st_res_full:'Reserved', st_sold_full:'Sold',
+    all_zones:'All Zones', all_stat:'All Status', all_types:'All Types',
+    zone_la:'LA — Canyon Edge', zone_lb:'LB — Valley Quarter', zone_lc:'LC — Valley District', zone_ld:'LD — Gorge Strip', zone_ah:'AH — Apart Hotel',
+    inv_title:'Inventory', search_ph:'🔍 ID or style...',
+    total:'Total', avail:'Available', reserved:'Reserved', sold:'Sold', portfolio:'Portfolio',
+    th_id:'ID', th_zone:'Zone', th_house:'House', th_plot:'Plot',
+    th_type:'Type', th_price:'Price', th_roi:'ROI', th_st:'St.', th_note:'Notes',
+    calc_title:'ROI Calculator', no_sel:'← Select a unit',
+    capex_lbl:'Total Price (CAPEX)', rent_lbl:'Daily Rent ($)',
+    occ_lbl:'Occupancy', mgmt_lbl:'Mgmt. Fee',
+    income_lbl:'Ann. Income', payback_lbl:'Payback', gross_lbl:'Gross',
+    comm_title:'Commission', your_comm:'Your Commission', comm_rate:'Rate %:',
+    src_title:'📡 Data Source', src_embedded:'Embedded', sheets_btn:'📊 Connect Google Sheets',
+    refresh_btn:'🔄 Refresh Now', records:'records',
+    map_info:'📍 Plot Info', map_click:'Click any marker',
+    map_prompt:'Click any marker on the map to view details',
+    house:'House', plot_area:'Plot', style:'Style', price:'Price',
+    daily_rent:'Daily Rent', roi_annual:'ROI (Annual)', annual_inc:'Ann. Income',
+    go_inv:'📊 View in Inventory Table',
+    status_free:'✅ Available', status_res:'🟡 Reserved', status_sold:'⬛ Sold',
+  },
+  ru: {
+    tab_map:'Интер. карта', tab_inv:'Инвентарь',
+    ready:'Готово', syncing:'Синхр...', sync_ok:'Sheets ✓', sync_err:'Ошибка',
+    status_lbl:'Статус',
+    st_free:'Своб.', st_res:'Бронь', st_sold:'Продано',
+    st_free_full:'Доступно', st_res_full:'Забронировано', st_sold_full:'Продано',
+    all_zones:'Все зоны', all_stat:'Все статусы', all_types:'Все типы',
+    zone_la:'LA — Край каньона', zone_lb:'LB — Долинный квартал', zone_lc:'LC — Район долины', zone_ld:'LD — Полоса ущелья', zone_ah:'AH — Apart Hotel',
+    inv_title:'Инвентарь', search_ph:'🔍 ID или тип...',
+    total:'Всего', avail:'Доступно', reserved:'Забронировано', sold:'Продано', portfolio:'Портфель',
+    th_id:'ID', th_zone:'Зона', th_house:'Дом', th_plot:'Участок',
+    th_type:'Тип', th_price:'Цена', th_roi:'ROI', th_st:'Ст.', th_note:'Заметки',
+    calc_title:'Калькулятор ROI', no_sel:'← Выберите объект',
+    capex_lbl:'Общая цена (CAPEX)', rent_lbl:'Дневная аренда ($)',
+    occ_lbl:'Загруженность', mgmt_lbl:'Комис. упр.',
+    income_lbl:'Год. доход', payback_lbl:'Окупаемость', gross_lbl:'Брутто',
+    comm_title:'Комиссия', your_comm:'Ваша комиссия', comm_rate:'% комис.:',
+    src_title:'📡 Источник данных', src_embedded:'Встроенные', sheets_btn:'📊 Подключить Google Sheets',
+    refresh_btn:'🔄 Обновить', records:'записей',
+    map_info:'📍 Информация', map_click:'Нажмите маркер',
+    map_prompt:'Нажмите на любой маркер на карте',
+    house:'Дом', plot_area:'Участок', style:'Стиль', price:'Цена',
+    daily_rent:'Дн. аренда', roi_annual:'ROI (Годовой)', annual_inc:'Год. доход',
+    go_inv:'📊 Посмотреть в таблице',
+    status_free:'✅ Доступно', status_res:'🟡 Забронировано', status_sold:'⬛ Продано',
+  }
+};
+
+let LANG = 'ka';
+function t(k) { return (I18N[LANG]||I18N.ka)[k] || k; }
+
+function setLang(l) {
+  LANG = l;
+  document.documentElement.lang = l;
+
+  // ── Lang pill buttons ──
+  document.querySelectorAll('.lang-pill button').forEach(b => {
+    b.classList.toggle('active',
+      b.textContent.trim() === l ||
+      (l==='ka' && b.textContent.includes('ქართ')));
+  });
+
+  // ── data-i18n elements ──
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const v = t(el.getAttribute('data-i18n'));
+    if (el.tagName === 'INPUT') el.placeholder = v;
+    else el.textContent = v;
+  });
+
+  // ── Nav tabs ──
+  const tm = document.querySelector('#tab-map span');
+  if (tm) tm.textContent = t('tab_map');
+  const ti = document.querySelector('#tab-inv span');
+  if (ti) ti.textContent = t('tab_inv');
+
+  // ── Map panel header ──
+  const mph = document.querySelector('.map-panel-header h3');
+  if (mph) mph.textContent = t('map_info');
+  const mpp = document.querySelector('.map-panel-header p');
+  if (mpp) mpp.textContent = t('map_click');
+  const mns = document.querySelector('.map-no-sel p');
+  if (mns) mns.textContent = t('map_prompt');
+
+  // ── Stats bar labels ──
+  const sls = document.querySelectorAll('.stat .sl');
+  ['total','avail','reserved','sold','portfolio'].forEach((k,i) => {
+    if (sls[i]) sls[i].textContent = t(k);
+  });
+
+  // ── Inventory panel title ──
+  const pt = document.querySelector('.panel-title');
+  if (pt) pt.textContent = t('inv_title');
+
+  // ── Search box placeholder ──
+  const sq = document.getElementById('s-q');
+  if (sq) sq.placeholder = t('search_ph');
+
+  // ── Zone filter (only "all" option translates; zone names stay) ──
+  const szOpts = document.querySelectorAll('#s-zone option');
+  if (szOpts.length) szOpts[0].textContent = t('all_zones');
+
+  // ── Status filter options ──
+  const ssOpts = document.querySelectorAll('#s-status option');
+  if (ssOpts.length >= 4) {
+    ssOpts[0].textContent = t('all_stat');
+    ssOpts[1].textContent = t('st_free');
+    ssOpts[2].textContent = t('st_res');
+    ssOpts[3].textContent = t('st_sold');
+  }
+
+  // ── Type filter ──
+  const stOpts = document.querySelectorAll('#s-type option');
+  if (stOpts.length > 0) stOpts[0].textContent = t('all_types');
+
+  // ── Zone filter ──
+  const szOpts2 = document.querySelectorAll('#s-zone option');
+  if (szOpts2.length >= 6) {
+    szOpts2[0].textContent = t('all_zones');
+    szOpts2[1].textContent = t('zone_la');
+    szOpts2[2].textContent = t('zone_lb');
+    szOpts2[3].textContent = t('zone_lc');
+    szOpts2[4].textContent = t('zone_ld');
+    szOpts2[5].textContent = t('zone_ah');
+  }
+
+  // ── Table headers ──
+  const ths = document.querySelectorAll('thead th');
+  const thKeys = ['th_id','th_zone','th_house','th_plot','th_type','th_price','th_roi','th_st','th_note'];
+  ths.forEach((th, i) => {
+    if (!thKeys[i]) return;
+    const hasArrow = th.textContent.includes('↕');
+    th.textContent = t(thKeys[i]) + (hasArrow ? ' ↕' : '');
+  });
+
+  // ── ROI Calculator section ──
+  const calcSections = document.querySelectorAll('.calc-section');
+  if (calcSections[0]) {
+    const h = calcSections[0].querySelector('h4');
+    if (h) h.textContent = t('calc_title');
+    const ciId = document.getElementById('ci-id');
+    if (ciId && !selPlot) ciId.textContent = t('no_sel');
+    // Field labels
+    const fls = calcSections[0].querySelectorAll('.fl label');
+    ['capex_lbl','rent_lbl','occ_lbl','mgmt_lbl'].forEach((k,i) => {
+      if (fls[i]) fls[i].textContent = t(k);
+    });
+    // Result box labels
+    const rls = calcSections[0].querySelectorAll('.rl2');
+    if (rls[0]) rls[0].textContent = t('income_lbl');
+    if (rls[2]) rls[2].textContent = t('payback_lbl');
+    if (rls[3]) rls[3].textContent = t('gross_lbl');
+  }
+
+  // ── Commission section ──
+  if (calcSections[1]) {
+    const h = calcSections[1].querySelector('h4');
+    if (h) h.textContent = t('comm_title');
+    const ct = calcSections[1].querySelector('.ct');
+    if (ct) ct.textContent = t('your_comm');
+    const cr = calcSections[1].querySelector('.cr-row label');
+    if (cr) cr.textContent = t('comm_rate');
+  }
+
+  // ── Data source section ──
+  if (calcSections[2]) {
+    const h = calcSections[2].querySelector('h4');
+    if (h) h.textContent = t('src_title');
+    const btns = calcSections[2].querySelectorAll('button');
+    if (btns[0]) btns[0].textContent = t('sheets_btn');
+    if (btns[1]) btns[1].textContent = t('refresh_btn');
+  }
+
+  // ── Sync badge ──
+  const sl = document.getElementById('sync-lbl');
+  if (sl && sl.getAttribute('data-i18n') === 'ready') sl.textContent = t('ready');
+
+  // ── Re-render dynamic tables + map ──
+  if (PLOTS.length) { updateStats(); renderTable(); updateLegendCounts(); }
+  if (selPlot) renderMapPanel(selPlot);
+}
+
+// ═══════════════════════════════════════
+// GOOGLE SHEETS SYNC
+// ═══════════════════════════════════════
+function openSheetsModal()  { document.getElementById('sheets-modal').style.display='flex'; }
+function closeSheetsModal() { document.getElementById('sheets-modal').style.display='none'; }
+
+function connectSheets() {
+  let url = document.getElementById('sheets-url').value.trim();
+  // Auto-fix common URL formats
+  if (url.includes('/edit') || url.includes('/view')) {
+    alert('"Publish to web" URL სჭირდება, არა view/edit URL!\n\nFile → Share → Publish to web → Sheet1 → CSV → Publish');
+    return;
+  }
+  if (!url.includes('output=csv') && url.includes('docs.google.com')) {
+    // Try to auto-append format
+    url = url.includes('?') ? url + '&output=csv' : url + '?output=csv';
+  }
+  CFG.sheetsUrl = url;
+  localStorage.setItem('gc_sheets_url', url);
+  closeSheetsModal();
+  manualRefresh();
+}
+
+function setSyncStatus(state, lbl) {
+  const d = document.getElementById('sync-dot');
+  d.className = 'dot ' + state;
+  const sl = document.getElementById('sync-lbl');
+  sl.textContent = lbl;
+  sl.removeAttribute('data-i18n');
+}
+
+async function fetchCSV(url) {
+  // Try direct fetch first (works if CORS is enabled on published Sheets)
+  try {
+    const r = await fetch(url, {mode:'cors'});
+    if (r.ok) { const txt = await r.text(); if (txt.length > 10) return txt; }
+  } catch(e) {}
+  // Fallback: use allorigins CORS proxy
+  const proxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+  const r2 = await fetch(proxy);
+  if (!r2.ok) throw new Error('HTTP ' + r2.status);
+  return await r2.text();
+}
+
+async function manualRefresh() {
+  if (!CFG.sheetsUrl) { openSheetsModal(); return; }
+  setSyncStatus('loading', t('syncing'));
+  try {
+    const csv = await fetchCSV(CFG.sheetsUrl);
+    const parsed = await new Promise((res,rej) => Papa.parse(csv, {
+      header:true, skipEmptyLines:true,
+      complete:r=>res(r.data), error:rej
+    }));
+    if (parsed.length > 0) {
+      // Merge status/notes from Sheets into PLOTS (keep latlng)
+      const byId = {};
+      PLOTS.forEach(p => byId[p.id] = p);
+      parsed.forEach(row => {
+        let pid = row['ნაკვეთის კოდი'] || row['აპარტ ოტელის ნომერი'] || row.id;
+        if (!pid) return;
+        pid = pid.trim();
+        if (byId[pid]) {
+          // Status merge logic with Georgian text support
+          let st = '';
+          if (row['სტატუსი']) {
+             let s = row['სტატუსი'].toLowerCase();
+             if (s.includes('თავისუფალი') || s.includes('ხელმისაწვდომი')) st = 'free';
+             else if (s.includes('დაჯავშნილი') || s.includes('რეზერვი') || s.includes('დაჯავშ')) st = 'reserved';
+             else if (s.includes('გაყიდული')) st = 'sold';
+          } else if (row.status) {
+             st = row.status.toLowerCase().trim();
+          }
+          if (st) byId[pid].status = st;
+          
+          if (row.notes || row['შენიშვნა']) byId[pid].notes = row.notes || row['შენიშვნა'] || '';
+          
+          // Number parsing helper
+          const parseNum = (str) => { if(!str)return 0; return parseFloat(String(str).replace(/\\s/g,'').replace(/,/g,'.'))||0; };
+          
+          // Override financial data directly from Google Sheets
+          if (row['საინვესტიცო ღირებულება']) byId[pid].ah_price = parseNum(row['საინვესტიცო ღირებულება']);
+          if (row['დღიური ქირის ფასი ($)']) byId[pid].daily_rent = parseNum(row['დღიური ქირის ფასი ($)']);
+          if (row['პესიმისტური Rental ROI %']) byId[pid].roi_file = parseNum(row['პესიმისტური Rental ROI %']);
+        }
+      });
+      setSyncStatus('ok','Sheets ✓');
+      document.getElementById('last-sync').textContent = new Date().toLocaleTimeString('ka-GE');
+      document.getElementById('src-info').innerHTML = `<strong>წყარო:</strong> Google Sheets (live)<br><strong>განახ.:</strong> <span id="last-sync">${new Date().toLocaleTimeString('ka-GE')}</span>`;
+      updateStats();
+      applyFilters();
+      renderMapMarkers(); // Refresh map colors
+    }
+  } catch(e) {
+    console.warn('Sheets error:', e);
+    setSyncStatus('err','შეც.');
+  }
+}
+
+setInterval(() => { if (CFG.sheetsUrl) manualRefresh(); }, CFG.refreshMs);
+
+// (setLang is defined in the I18N section above)
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  updateStats();
+  applyFilters();
+  initMap();
+  if (CFG.sheetsUrl) manualRefresh();
+});
+</script>
+</body>
+</html>

@@ -9,6 +9,113 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600&display=swap');
+
+/* ── AI FLOATING BOT BUTTON ── */
+.bot-float-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 5000;
+  background: var(--primary);
+  color: #fff;
+  border: 2px solid var(--accent);
+  padding: 12px 20px;
+  border-radius: 30px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,.2);
+  transition: all .3s ease;
+  cursor: pointer;
+}
+.bot-float-btn:hover {
+  background: var(--accent);
+  color: var(--primary);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.3);
+}
+@media (max-width: 600px) {
+  .bot-float-btn {
+    bottom: 16px;
+    right: 16px;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}
+
+/* ── CHATBOT SIDEBAR CARD ── */
+.chatbot-section {
+  background: var(--primary-pale) !important;
+  border: 1px solid var(--accent) !important;
+}
+.bot-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+.bot-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--primary);
+}
+.bot-status-dot {
+  width: 8px;
+  height: 8px;
+  background: #27ae60;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #27ae60;
+}
+.bot-msg {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--card);
+  padding: 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  position: relative;
+}
+.bot-msg::after {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: -6px;
+  width: 10px;
+  height: 10px;
+  background: var(--card);
+  border-left: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  transform: rotate(45deg);
+}
+.bot-chat-btn {
+  background: var(--primary);
+  color: #fff;
+  border: 1px solid var(--accent);
+  padding: 10px 16px;
+  border-radius: 20px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  text-align: center;
+  transition: all .2s;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+.bot-chat-btn:hover {
+  background: var(--accent);
+  color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+}
+
 :root {
   --bg:#f8f7f4;--card:#fff;--primary:#3d5a3e;--primary-light:#5c7e5d;
   --primary-pale:#eef4ee;--accent:#c8a96e;--accent-h:#b5934f;
@@ -224,16 +331,16 @@ tbody td{padding:9px 12px;vertical-align:middle;white-space:nowrap}
 .src-info{font-size:11px;color:var(--muted);line-height:1.6;margin-top:6px}
 .src-info strong{color:var(--primary)}
 @media(max-width:1000px){
-  .inv-right{display:none}
   .map-panel{width:260px}
+  .inv-wrapper{flex-direction:column;overflow-y:auto;display:block}
+  .inv-left{height:450px;flex:none}
+  .inv-right{width:100%;border-left:none;border-top:1px solid var(--border);display:flex;flex:none}
 }
 @media(max-width:700px){
   .nav-tab span{display:none}
   #page-map{flex-direction:column}
   .map-panel{width:100%;border-left:none;border-top:1px solid var(--border);height:40%;max-height:40%}
-  .inv-wrapper{flex-direction:column;overflow-y:auto;display:block}
-  .inv-left{height:450px;flex:none}
-  .inv-right{width:100%;border-left:none;border-top:1px solid var(--border);display:flex;flex:none}
+  .map-legend{top:auto;bottom:12px;left:12px;transform:scale(0.85);transform-origin:bottom left}
 }
 @media(max-width:600px){
   .topbar { padding: 0 6px; gap: 4px; }
@@ -278,10 +385,10 @@ tbody td{padding:9px 12px;vertical-align:middle;white-space:nowrap}
     <div class="leg-item"><div class="leg-dot" style="background:#e67e22"></div><span data-i18n="st_res_full">დაჯავშნილი</span> <span class="leg-count" id="lc-res">—</span></div>
     <div class="leg-item"><div class="leg-dot" style="background:#7f8c8d"></div><span data-i18n="st_sold_full">გაყიდული</span> <span class="leg-count" id="lc-sold">—</span></div>
     <hr class="leg-sep">
-    <div class="leg-item"><div class="leg-dot" style="background:#a24035;border-radius:2px"></div>LA — კანიონის პირი</div>
-    <div class="leg-item"><div class="leg-dot" style="background:#4a8f4e;border-radius:2px"></div>LB — ველის კვარტალი</div>
-    <div class="leg-item"><div class="leg-dot" style="background:#6e7160;border-radius:2px"></div>LC — ველის უბანი</div>
-    <div class="leg-item"><div class="leg-dot" style="background:#a1b5a9;border-radius:2px"></div>LD — ხეობის ზოლი</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#a24035;border-radius:2px"></div><span data-i18n="zone_la">LA — კანიონის პირი</span></div>
+    <div class="leg-item"><div class="leg-dot" style="background:#4a8f4e;border-radius:2px"></div><span data-i18n="zone_lb">LB — პირველი ზოლი</span></div>
+    <div class="leg-item"><div class="leg-dot" style="background:#6e7160;border-radius:2px"></div><span data-i18n="zone_lc">LC — მეორე ზოლი</span></div>
+    <div class="leg-item"><div class="leg-dot" style="background:#a1b5a9;border-radius:2px"></div><span data-i18n="zone_ld">LD — მესამე ზოლი</span></div>
   </div>
 
   <div class="map-panel">
@@ -319,11 +426,11 @@ tbody td{padding:9px 12px;vertical-align:middle;white-space:nowrap}
             <input type="text" class="search-box" id="s-q" placeholder="🔍 ID ან სტილი..." oninput="applyFilters()">
             <select class="filter-select" id="s-zone" onchange="applyFilters()">
               <option value="all" data-i18n="all_zones">ყველა ზონა</option>
-              <option value="LA">LA — კანიონის პირი</option>
-              <option value="LB">LB — ველის კვარტალი</option>
-              <option value="LC">LC — ველის უბანი</option>
-              <option value="LD">LD — ხეობის ზოლი</option>
-              <option value="AH">AH — Apart Hotel</option>
+              <option value="LA" data-i18n="zone_la">LA — კანიონის პირი</option>
+              <option value="LB" data-i18n="zone_lb">LB — პირველი ზოლი</option>
+              <option value="LC" data-i18n="zone_lc">LC — მეორე ზოლი</option>
+              <option value="LD" data-i18n="zone_ld">LD — მესამე ზოლი</option>
+              <option value="AH" data-i18n="zone_ah">AH — Apart Hotel</option>
             </select>
             <select class="filter-select" id="s-status" onchange="applyFilters()">
               <option value="all" data-i18n="all_stat">ყველა სტ.</option>
@@ -332,7 +439,7 @@ tbody td{padding:9px 12px;vertical-align:middle;white-space:nowrap}
               <option value="sold" data-i18n="st_sold">გაყ.</option>
             </select>
             <select class="filter-select" id="s-type" onchange="applyFilters()">
-              <option value="all">ყველა ტიპი</option>
+              <option value="all" data-i18n="all_types">ყველა ტიპი</option>
               <option value="Modern Flat-Roof">Modern Flat-Roof</option>
               <option value="Barnhouse">Barnhouse</option>
               <option value="A-Frame">A-Frame</option>
@@ -406,18 +513,20 @@ tbody td{padding:9px 12px;vertical-align:middle;white-space:nowrap}
         </div>
       </div>
 
-      <!-- Commission -->
-      <div class="calc-section">
-        <h4>კომისია</h4>
-        <div class="comm-box">
-          <div class="ct">შენი კომისია</div>
-          <div class="cv" id="comm-v">$0</div>
-          <div class="cs" id="comm-d">— ობიექტი მოირჩიეთ —</div>
-          <div class="cr-row">
-            <label>კომ. %:</label>
-            <input type="range" id="comm-r" min="1" max="6" value="3" step=".5" oninput="recalc()">
-            <span class="crlbl" id="comm-rl">3%</span>
+      <!-- Chatbot Section (Replaced Commission) -->
+      <div class="calc-section chatbot-section">
+        <h4 data-i18n="bot_title">AI ასისტენტი</h4>
+        <div class="bot-card">
+          <div class="bot-header">
+            <span class="bot-status-dot"></span>
+            <strong data-i18n="bot_status">ასისტენტი ონლაინშია</strong>
           </div>
+          <p class="bot-msg" data-i18n="bot_desc">
+            გამარჯობა! მე ვარ Green Canyon-ის AI მრჩეველი. შემიძლია მომენტალურად გიპასუხოთ კითხვებზე ფასების, განვადებისა და ROI-ს შესახებ ტელეგრამში.
+          </p>
+          <a href="https://t.me/GreenCanyonSalesBot" target="_blank" class="bot-chat-btn">
+            <span data-i18n="bot_btn">💬 ჩათის დაწყება ტელეგრამში</span>
+          </a>
         </div>
       </div>
 
@@ -466,6 +575,8 @@ tbody td{padding:9px 12px;vertical-align:middle;white-space:nowrap}
   </div>
 </div>
 
+
+
 <script>
 // ═══════════════════════════════════════
 // EMBEDDED DATA — from Settlement Excel
@@ -475,15 +586,20 @@ INVENTORY_PLACEHOLDER
 // ═══════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════
-const CFG = {
-  sheetsUrl: localStorage.getItem('gc_sheets_url') || '',
-  pageSize: 20,
-  refreshMs: 5 * 60 * 1000
-};
-const MAP_IMG = 'https://galt-map-2026.surge.sh/Assets/masterplan_leaflet.jpg';
+  const CFG = {
+    sheetsUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQf7QPiuQrajThqiHwSQxGSQQ1nb9XEU8YHmK5atshH6VxSTb90QjZIEUGuAlImhQ/pub?output=csv',
+    pageSize: 20,
+    refreshMs: 5 * 60 * 1000
+  };
+const MAP_IMG = './masterplan_leaflet.jpg';
 const MAP_BOUNDS = [[0,0],[2383.94,1683.78]];
 const ZONE_COLORS = {LA:'#a24035',LB:'#4a8f4e',LC:'#6e7160',LD:'#a1b5a9'};
 const STATUS_COLORS = {free:'#27ae60',reserved:'#e67e22',sold:'#7f8c8d'};
+
+// Simple transformation from SVG pixel coords to Lat/Lng (kept as fallback or reference if needed, but not used by Leaflet CRS.Simple)
+function pixelToLatLng(py, px) {
+  return [px, py];
+}
 
 // ═══════════════════════════════════════
 // STATE
@@ -510,8 +626,9 @@ function showPage(id) {
 }
 
 // ═══════════════════════════════════════
-// LEAFLET MAP
+// MAPBOX MAP
 // ═══════════════════════════════════════
+// LEAFLET MAP
 function initMap() {
   leafletMap = L.map('leaflet-map', {
     crs: L.CRS.Simple, minZoom: -2, maxZoom: 2, zoomSnap: 0.1,
@@ -600,6 +717,13 @@ function renderMapPanel(p) {
   const sTxt = t('status_' + stKey) || p.status;
   const sCls = p.status;
 
+  let styledHouse = p.style;
+  if (LANG === 'en') {
+    styledHouse = styledHouse.replace('(მაღალი ამონაგები)', '(High Return)');
+  } else if (LANG === 'ru') {
+    styledHouse = styledHouse.replace('(მაღალი ამონაგები)', '(Высокая доходность)');
+  }
+
   document.getElementById('map-panel-body').innerHTML = `
     <div class="plot-id">${p.id}</div>
     <span class="plot-zone-tag ${zTag}">${p.zone} ${t('th_zone')}</span>
@@ -607,7 +731,7 @@ function renderMapPanel(p) {
     <div class="status-box ${sCls}"><div class="stxt">${sTxt}</div></div>
     <div class="info-row"><span class="lbl">${t('house')}</span><span class="val">${p.sqm} m²</span></div>
     ${p.zone !== 'AH' ? `<div class="info-row"><span class="lbl">${t('plot_area')}</span><span class="val">${p.area} m²</span></div>` : ''}
-    <div class="info-row"><span class="lbl">${t('style')}</span><span class="val">${p.style}</span></div>
+    <div class="info-row"><span class="lbl">${t('style')}</span><span class="val">${styledHouse}</span></div>
     <div class="info-row"><span class="lbl">${t('price')}</span><span class="val" style="color:var(--accent-h)">$${price.toLocaleString()}</span></div>
     <div class="info-row"><span class="lbl">${t('daily_rent')}</span><span class="val">$${p.daily_rent}</span></div>
     <div class="mini-roi">
@@ -705,12 +829,19 @@ function renderTable() {
     const bc = p.status==='free'?'badge-free':p.status==='reserved'?'badge-reserved':'badge-sold';
     const bt = p.status==='free'?'ხელმ.':p.status==='reserved'?'დაჯავ.':'გაყ.';
     const zc = 'z-'+p.zone;
+    let styledTable = p.style;
+    if (LANG === 'en') {
+      styledTable = styledTable.replace('(მაღალი ამონაგები)', '(High Return)');
+    } else if (LANG === 'ru') {
+      styledTable = styledTable.replace('(მაღალი ამონაგები)', '(Высокая доходность)');
+    }
+
     tr.innerHTML = `
       <td><strong>${p.id}</strong></td>
       <td><span class="zpill ${zc}">${p.zone}</span></td>
       <td>${p.sqm}m²</td>
       <td>${p.zone==='AH'?'—':p.area+'m²'}</td>
-      <td style="font-size:11px;color:#555">${p.style}</td>
+      <td style="font-size:11px;color:#555">${styledTable}</td>
       <td><strong style="color:var(--accent-h)">$${price.toLocaleString()}</strong></td>
       <td style="color:${parseFloat(roi)>10?'#1a7a3f':'#888'};font-weight:600">${roi}%</td>
       <td><span class="badge ${bc}">${bt}</span></td>
@@ -752,27 +883,25 @@ function recalc() {
   const rent  = parseFloat(document.getElementById('c-rent').value)||0;
   const occ   = parseFloat(document.getElementById('c-occ').value)/100;
   const mgmt  = parseFloat(document.getElementById('c-mgmt').value)/100;
-  const crate = parseFloat(document.getElementById('comm-r').value)/100;
 
   document.getElementById('occ-l').textContent    = Math.round(occ*100)+'%';
   document.getElementById('mgmt-l').textContent   = Math.round(mgmt*100)+'%';
-  document.getElementById('comm-rl').textContent  = (crate*100)+'%';
 
   const gross = rent*365*occ;
   const net   = gross*(1-mgmt)*.82;
   const roi   = capex>0?(net/capex*100):0;
   const pb    = net>0?(capex/net):0;
-  const comm  = capex*crate;
 
   document.getElementById('r-gr').textContent  = '$'+Math.round(gross).toLocaleString();
   document.getElementById('r-inc').textContent = '$'+Math.round(net).toLocaleString();
   document.getElementById('r-roi').textContent = roi.toFixed(1)+'%';
   document.getElementById('r-pb').textContent  = pb.toFixed(1)+'წ';
-  document.getElementById('comm-v').textContent = '$'+Math.round(comm).toLocaleString();
-  document.getElementById('comm-d').textContent = `${(crate*100)}% × $${capex.toLocaleString()}`;
 }
 
-['c-occ','c-mgmt','comm-r','c-rent'].forEach(id=>document.getElementById(id).addEventListener('input',recalc));
+['c-occ','c-mgmt','c-rent'].forEach(id=> {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input',recalc);
+});
 
 // ═══════════════════════════════════════
 // I18N — TRANSLATIONS
@@ -784,7 +913,9 @@ const I18N = {
     status_lbl:'სტატუსი',
     st_free:'ხელმ.', st_res:'დაჯავ.', st_sold:'გაყ.',
     st_free_full:'ხელმისაწვდომი', st_res_full:'დაჯავშნილი', st_sold_full:'გაყიდული',
-    all_zones:'ყველა ზონა', all_stat:'ყველა სტ.',
+    all_zones:'ყველა ზონა', all_stat:'ყველა სტ.', all_types:'ყველა ტიპი',
+    zone_la:'LA — კანიონის პირი', zone_lb:'LB — პირველი ზოლი', zone_lc:'LC — მეორე ზოლი', zone_ld:'LD — მესამე ზოლი', zone_ah:'AH — Apart Hotel',
+    float_bot:'AI ასისტენტი 💬',
     inv_title:'ინვენტარი', search_ph:'🔍 ID ან სტილი...',
     total:'სულ', avail:'ხელმისაწვდომი', reserved:'დაჯავშნილი', sold:'გაყიდული', portfolio:'პორტფელი',
     th_id:'ID', th_zone:'ზონა', th_house:'სახლი', th_plot:'ნაკვეთი',
@@ -793,7 +924,9 @@ const I18N = {
     capex_lbl:'ჯამური ფასი (CAPEX)', rent_lbl:'დღიური ქირა ($)',
     occ_lbl:'დატვირთულობა', mgmt_lbl:'მართვის საკ.',
     income_lbl:'წლ. შემ.', payback_lbl:'უკუგება', gross_lbl:'ბრუტო',
-    comm_title:'კომისია', your_comm:'შენი კომისია', comm_rate:'კომ. %:',
+    bot_title:'AI ასისტენტი', bot_status:'ასისტენტი ონლაინშია',
+    bot_desc:'გამარჯობა! მე ვარ Green Canyon-ის AI მრჩეველი. შემიძლია მომენტალურად გიპასუხოთ კითხვებზე ფასების, განვადებისა და ROI-ს შესახებ ტელეგრამში.',
+    bot_btn:'💬 ჩათის დაწყება ტელეგრამში',
     src_title:'📡 მონაცემები', src_embedded:'ჩაშენებული', sheets_btn:'📊 Google Sheets კავშირი',
     refresh_btn:'🔄 ახლავე განახლება', records:'ჩანაწ.',
     map_info:'📍 ნაკვეთის ინფო', map_click:'დააჭირეთ ნებისმიერ მარკერს',
@@ -809,7 +942,9 @@ const I18N = {
     status_lbl:'Status',
     st_free:'Avail.', st_res:'Reserv.', st_sold:'Sold',
     st_free_full:'Available', st_res_full:'Reserved', st_sold_full:'Sold',
-    all_zones:'All Zones', all_stat:'All Status',
+    all_zones:'All Zones', all_stat:'All Status', all_types:'All Types',
+    zone_la:'LA — Canyon Edge', zone_lb:'LB — First Line', zone_lc:'LC — Second Line', zone_ld:'LD — Third Line', zone_ah:'AH — Apart Hotel',
+    float_bot:'AI Assistant 💬',
     inv_title:'Inventory', search_ph:'🔍 ID or style...',
     total:'Total', avail:'Available', reserved:'Reserved', sold:'Sold', portfolio:'Portfolio',
     th_id:'ID', th_zone:'Zone', th_house:'House', th_plot:'Plot',
@@ -818,7 +953,9 @@ const I18N = {
     capex_lbl:'Total Price (CAPEX)', rent_lbl:'Daily Rent ($)',
     occ_lbl:'Occupancy', mgmt_lbl:'Mgmt. Fee',
     income_lbl:'Ann. Income', payback_lbl:'Payback', gross_lbl:'Gross',
-    comm_title:'Commission', your_comm:'Your Commission', comm_rate:'Rate %:',
+    bot_title:'AI Assistant', bot_status:'Assistant Online',
+    bot_desc:'Hello! I am the Green Canyon AI Advisor. I can instantly answer your questions about prices, installments, and ROI in Telegram.',
+    bot_btn:'💬 Start Chat in Telegram',
     src_title:'📡 Data Source', src_embedded:'Embedded', sheets_btn:'📊 Connect Google Sheets',
     refresh_btn:'🔄 Refresh Now', records:'records',
     map_info:'📍 Plot Info', map_click:'Click any marker',
@@ -834,7 +971,9 @@ const I18N = {
     status_lbl:'Статус',
     st_free:'Своб.', st_res:'Бронь', st_sold:'Продано',
     st_free_full:'Доступно', st_res_full:'Забронировано', st_sold_full:'Продано',
-    all_zones:'Все зоны', all_stat:'Все статусы',
+    all_zones:'Все зоны', all_stat:'Все статусы', all_types:'Все типы',
+    zone_la:'LA — Край каньона', zone_lb:'LB — Первая линия', zone_lc:'LC — Вторая линия', zone_ld:'LD — Третья линия', zone_ah:'AH — Apart Hotel',
+    float_bot:'AI Помощник 💬',
     inv_title:'Инвентарь', search_ph:'🔍 ID или тип...',
     total:'Всего', avail:'Доступно', reserved:'Забронировано', sold:'Продано', portfolio:'Портфель',
     th_id:'ID', th_zone:'Зона', th_house:'Дом', th_plot:'Участок',
@@ -843,7 +982,9 @@ const I18N = {
     capex_lbl:'Общая цена (CAPEX)', rent_lbl:'Дневная аренда ($)',
     occ_lbl:'Загруженность', mgmt_lbl:'Комис. упр.',
     income_lbl:'Год. доход', payback_lbl:'Окупаемость', gross_lbl:'Брутто',
-    comm_title:'Комиссия', your_comm:'Ваша комиссия', comm_rate:'% комис.:',
+    bot_title:'AI Ассистент', bot_status:'Ассистент онлайн',
+    bot_desc:'Здравствуйте! Я — AI Помощник Green Canyon. Я могу мгновенно ответить на ваши вопросы о ценах, рассрочке и ROI в Телеграме.',
+    bot_btn:'💬 Начать чат в Telegram',
     src_title:'📡 Источник данных', src_embedded:'Встроенные', sheets_btn:'📊 Подключить Google Sheets',
     refresh_btn:'🔄 Обновить', records:'записей',
     map_info:'📍 Информация', map_click:'Нажмите маркер',
@@ -917,6 +1058,21 @@ function setLang(l) {
     ssOpts[3].textContent = t('st_sold');
   }
 
+  // ── Type filter ──
+  const stOpts = document.querySelectorAll('#s-type option');
+  if (stOpts.length > 0) stOpts[0].textContent = t('all_types');
+
+  // ── Zone filter ──
+  const szOpts2 = document.querySelectorAll('#s-zone option');
+  if (szOpts2.length >= 6) {
+    szOpts2[0].textContent = t('all_zones');
+    szOpts2[1].textContent = t('zone_la');
+    szOpts2[2].textContent = t('zone_lb');
+    szOpts2[3].textContent = t('zone_lc');
+    szOpts2[4].textContent = t('zone_ld');
+    szOpts2[5].textContent = t('zone_ah');
+  }
+
   // ── Table headers ──
   const ths = document.querySelectorAll('thead th');
   const thKeys = ['th_id','th_zone','th_house','th_plot','th_type','th_price','th_roi','th_st','th_note'];
@@ -945,14 +1101,16 @@ function setLang(l) {
     if (rls[3]) rls[3].textContent = t('gross_lbl');
   }
 
-  // ── Commission section ──
+  // ── Chatbot section ──
   if (calcSections[1]) {
     const h = calcSections[1].querySelector('h4');
-    if (h) h.textContent = t('comm_title');
-    const ct = calcSections[1].querySelector('.ct');
-    if (ct) ct.textContent = t('your_comm');
-    const cr = calcSections[1].querySelector('.cr-row label');
-    if (cr) cr.textContent = t('comm_rate');
+    if (h) h.textContent = t('bot_title');
+    const ct = calcSections[1].querySelector('strong');
+    if (ct) ct.textContent = t('bot_status');
+    const cd = calcSections[1].querySelector('.bot-msg');
+    if (cd) cd.textContent = t('bot_desc');
+    const cb = calcSections[1].querySelector('.bot-chat-btn span');
+    if (cb) cb.textContent = t('bot_btn');
   }
 
   // ── Data source section ──
@@ -974,10 +1132,12 @@ function setLang(l) {
 }
 
 // ═══════════════════════════════════════
-// GOOGLE SHEETS SYNC
+// GOOGLE SHEETS & MAPBOX SYNC MODALS
 // ═══════════════════════════════════════
 function openSheetsModal()  { document.getElementById('sheets-modal').style.display='flex'; }
 function closeSheetsModal() { document.getElementById('sheets-modal').style.display='none'; }
+
+
 
 function connectSheets() {
   let url = document.getElementById('sheets-url').value.trim();
@@ -1031,13 +1191,31 @@ async function manualRefresh() {
       const byId = {};
       PLOTS.forEach(p => byId[p.id] = p);
       parsed.forEach(row => {
-        if (!row.id) return;
-        if (byId[row.id]) {
-          byId[row.id].status = (row.status||'free').toLowerCase().trim();
-          byId[row.id].notes  = row.notes || '';
-          // Update prices if provided
-          if (row.daily_rent && parseFloat(row.daily_rent)) byId[row.id].daily_rent = parseFloat(row.daily_rent);
-          if (row.land_price && parseFloat(row.land_price)) byId[row.id].land_price = parseFloat(row.land_price);
+        let pid = row['ნაკვეთის კოდი'] || row['აპარტ ოტელის ნომერი'] || row.id;
+        if (!pid) return;
+        pid = pid.trim();
+        if (byId[pid]) {
+          // Status merge logic with Georgian text support
+          let st = '';
+          if (row['სტატუსი']) {
+             let s = row['სტატუსი'].toLowerCase();
+             if (s.includes('თავისუფალი') || s.includes('ხელმისაწვდომი')) st = 'free';
+             else if (s.includes('დაჯავშნილი') || s.includes('რეზერვი') || s.includes('დაჯავშ')) st = 'reserved';
+             else if (s.includes('გაყიდული')) st = 'sold';
+          } else if (row.status) {
+             st = row.status.toLowerCase().trim();
+          }
+          if (st) byId[pid].status = st;
+          
+          if (row.notes || row['შენიშვნა']) byId[pid].notes = row.notes || row['შენიშვნა'] || '';
+          
+          // Number parsing helper
+          const parseNum = (str) => { if(!str)return 0; return parseFloat(String(str).replace(/\\s/g,'').replace(/,/g,'.'))||0; };
+          
+          // Override financial data directly from Google Sheets
+          if (row['საინვესტიცო ღირებულება']) byId[pid].ah_price = parseNum(row['საინვესტიცო ღირებულება']);
+          if (row['დღიური ქირის ფასი ($)']) byId[pid].daily_rent = parseNum(row['დღიური ქირის ფასი ($)']);
+          if (row['პესიმისტური Rental ROI %']) byId[pid].roi_file = parseNum(row['პესიმისტური Rental ROI %']);
         }
       });
       setSyncStatus('ok','Sheets ✓');
@@ -1067,5 +1245,10 @@ window.addEventListener('DOMContentLoaded', () => {
   if (CFG.sheetsUrl) manualRefresh();
 });
 </script>
+
+<!-- AI Floating Assistant Button -->
+<a href="https://t.me/GreenCanyonSalesBot" target="_blank" class="bot-float-btn">
+  <span data-i18n="float_bot">AI ასისტენტი 💬</span>
+</a>
 </body>
 </html>

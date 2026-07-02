@@ -1,4 +1,75 @@
-import { projectData, personas } from './data.js';
+const projectData = {
+    ka: {
+        name: "Green Canyon",
+        location: "წალკა, საქართველო (1500მ სიმაღლეზე)",
+        roi: "8-12% წლიური",
+        capitalAppreciation: "20-30% მშენებლობის დასრულებამდე",
+        prices: {
+            studio: "$59,500-დან",
+            oneBed: "$85,000-დან",
+            cottages: "$150,000-დან $440,000-მდე"
+        },
+        paymentTerms: {
+            downpayment: "15-30%",
+            installments: "36 თვიანი 0% განვადება",
+            escrow: "საერთაშორისო Escrow ანგარიშები (ბანკის გარანტია)"
+        },
+        timeline: {
+            start: "2026 წლის ზაფხული",
+            completion: "2030 წლის გაზაფხული (36 თვე)"
+        },
+        features: ["LEED/Green Globe სერთიფიკატი", "Radisson Standard MEP", "Smart Home", "სპა, რესტორანი, ზიპ-ლაინი"],
+        objections: {
+            price: "თქვენ ყიდულობთ 5-ვარსკვლავიან ეკოსისტემას და ტერნქეი რემონტს (Bosch/Grohe).",
+            climate: "გრილი ზაფხული (20-22°C) - საუკეთესო თავშესაფარი სიცხისგან.",
+            trust: "Escrow ანგარიში - დეველოპერი ფულს იღებს მხოლოდ ეტაპების ჩაბარების შემდეგ."
+        }
+    },
+    en: {
+        name: "Green Canyon",
+        location: "Tsalka, Georgia (1500m altitude)",
+        roi: "8-12% Annual",
+        capitalAppreciation: "20-30% before completion",
+        prices: {
+            studio: "From $59,500",
+            oneBed: "From $85,000",
+            cottages: "From $150,000 to $440,000"
+        },
+        paymentTerms: {
+            downpayment: "15-30%",
+            installments: "36-month 0% installments",
+            escrow: "International Escrow accounts (Bank guarantee)"
+        },
+        timeline: {
+            start: "Summer 2026",
+            completion: "Spring 2030 (36 months)"
+        },
+        features: ["LEED/Green Globe Certification", "Radisson Standard MEP", "Smart Home", "Spa, Restaurant, Zip-line"],
+        objections: {
+            price: "You are purchasing a 5-star ecosystem with turnkey renovation (Bosch/Grohe).",
+            climate: "Cool summer (20-22°C) - the best escape from heat.",
+            trust: "Escrow account - direct developer payment only after stage completion."
+        }
+    }
+};
+
+// Build Timestamp: 2026-04-21 11:20
+const personas = [
+    {
+        id: "investor",
+        name: { ka: "ბატონი ხანი", en: "Mr. Khan", ge: "ბატონი ხანი" },
+        description: { ka: "ინვესტორი დუბაიდან, აინტერესებს ROI და უსაფრთხოება.", en: "Investor from Dubai, interested in ROI and safety.", ge: "ინვესტორი დუბაიდან" },
+        initialMessage: { ka: "გამარჯობა, მაინტერესებს თქვენი პროექტი. რა გარანტიები მაქვს და რა იქნება ჩემი წლიური მოგება?", en: "Hello, I'm interested in your project. What guarantees do I have and what will be my annual return?", ge: "გამარჯობა, მაინტერესებს თქვენი პროექტი." },
+        traits: ["skeptical", "logical", "safety-first"]
+    },
+    {
+        id: "wellness",
+        name: { ka: "თამარი", en: "Tamar", ge: "თამარი" },
+        description: { ka: "ადგილობრივი მაცხოვრებელი, ეძებს აგარაკს ოჯახისთვის.", en: "Local resident, looking for a cottage for her family.", ge: "ადგილობრივი მაცხოვრებელი" },
+        initialMessage: { ka: "გამარჯობა, წალკა ძალიან ცივი ხომ არ არის? და რითია თქვენი კოტეჯები გამორჩეული?", en: "Hello, isn't Tsalka too cold? And what makes your cottages special?", ge: "გამარჯობა, წალკა ძალიან ცივი ხომ არ არის?" },
+        traits: ["lifestyle-oriented", "nature-lover"]
+    }
+];
 
 let currentLang = 'ka';
 let activePersona = null;
@@ -116,8 +187,8 @@ function updateLanguageUI() {
 function renderPersonas() {
     ui.personaList.innerHTML = '';
     personas.forEach(p => {
-        const name = p.name[currentLang] || p.name['en'] || 'Persona';
-        const desc = p.description[currentLang] || p.description['en'] || '';
+        const name = p.name[currentLang] || p.name['ge'] || p.name['en'] || 'Persona';
+        const desc = p.description[currentLang] || p.description['ge'] || p.description['en'] || '';
         
         const card = document.createElement('div');
         card.className = 'persona-card';
@@ -137,30 +208,33 @@ function startSession(persona) {
     ui.setupScreen.classList.add('hidden');
     ui.chatScreen.classList.remove('hidden');
     
-    const name = persona.name[currentLang] || persona.name['en'];
+    const name = persona.name[currentLang] || persona.name['ge'] || persona.name['en'];
     ui.activePersonaName.textContent = name;
     ui.activePersonaAvatar.textContent = name[0];
     ui.chatMessages.innerHTML = '';
     
-    const initialMsg = persona.initialMessage[currentLang] || persona.initialMessage['en'];
+    const initialMsg = persona.initialMessage[currentLang] || persona.initialMessage['ge'] || persona.initialMessage['en'];
     addMessage('lead', initialMsg);
 }
 
-function addMessage(type, text) {
+function addMessage(type, text, saveToHistory = true) {
     const msg = document.createElement('div');
     msg.className = `message ${type}`;
     msg.textContent = text;
     ui.chatMessages.appendChild(msg);
     
-    // Smooth scroll to bottom
-    setTimeout(() => {
-        ui.chatMessages.scrollTo({
-            top: ui.chatMessages.scrollHeight,
-            behavior: 'smooth'
-        });
-    }, 50);
+    // Improved scrolling logic
+    requestAnimationFrame(() => {
+        ui.chatMessages.scrollTop = ui.chatMessages.scrollHeight;
+        // Backup for smooth feel
+        setTimeout(() => {
+            ui.chatMessages.scrollTop = ui.chatMessages.scrollHeight;
+        }, 100);
+    });
     
-    chatHistory.push({ type, text });
+    if (saveToHistory) {
+        chatHistory.push({ type, text });
+    }
 }
 
 async function handleSend() {
@@ -170,79 +244,83 @@ async function handleSend() {
     addMessage('agent', text);
     ui.chatInput.value = '';
     
-    // Show Typing Indicator
-    setTimeout(async () => {
-        ui.typingIndicator.classList.remove('hidden');
-        ui.chatMessages.scrollTop = ui.chatMessages.scrollHeight;
+    // Reset Speech Recognition buffer if active to prevent duplication
+    if (isRecording && recognition) {
+        recognition.stop();
+        // It will auto-restart in onend if isRecording is true, 
+        // which clears the internal results buffer
+    }
+    
+    ui.typingIndicator.classList.remove('hidden');
+    ui.chatMessages.scrollTop = ui.chatMessages.scrollHeight;
+    
+    try {
+        const response = await fetch(`/.netlify/functions/chat?t=${Date.now()}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                messages: chatHistory.map(m => ({
+                    role: m.type === 'lead' ? 'assistant' : 'user',
+                    content: m.text
+                })),
+                persona: activePersona.id,
+                lang: currentLang
+            })
+        });
         
-        try {
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    messages: chatHistory.map(m => ({
-                        role: m.type === 'lead' ? 'assistant' : 'user',
-                        content: m.text
-                    })),
-                    persona: activePersona.id,
-                    lang: currentLang
-                })
-            });
-            
-            const data = await response.json();
-            ui.typingIndicator.classList.add('hidden');
-            
-            if (data.message) {
-                addMessage('lead', data.message);
-            } else {
-                throw new Error('Empty response');
-            }
-        } catch (error) {
-            console.error('AI Error:', error);
-            ui.typingIndicator.classList.add('hidden');
-            addMessage('lead', currentLang === 'ka' ? 'ბოდიში, კავშირის პრობლემა მაქვს...' : 'Sorry, I am having connection issues...');
+        const data = await response.json();
+        console.log('Chat Version:', data.version || 'v5.0-Legacy');
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'API Sync issue');
         }
-    }, 500);
+        
+        ui.typingIndicator.classList.add('hidden');
+        if (data.message) addMessage('lead', data.message);
+    } catch (error) {
+        console.error('AI Offline:', error);
+        ui.typingIndicator.classList.add('hidden');
+        addMessage('lead', currentLang === 'ka' ? `ბოდიში, კავშირის პრობლემა მაქვს (${error.message}).` : `Sorry, connection issue (${error.message}).`, false);
+    }
 }
 
 async function showResults() {
     isGrading = true;
     ui.chatScreen.classList.add('hidden');
     ui.resultsScreen.classList.remove('hidden');
-    
-    // Show loading state for evaluation
     ui.finalScore.textContent = '...';
-    ui.scoreText.textContent = currentLang === 'ka' ? 'მიმდინარეობს ანალიზი...' : 'Analyzing performance...';
     
     try {
-        const response = await fetch('/api/evaluate', {
+        const response = await fetch(`/.netlify/functions/evaluate?t=${Date.now()}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                history: chatHistory,
-                lang: currentLang
+            body: JSON.stringify({ 
+                history: chatHistory, 
+                persona: activePersona.id,
+                lang: currentLang 
             })
         });
         
         const scores = await response.json();
-        
-        ui.finalScore.textContent = scores.total;
-        ui.barAccuracy.style.width = scores.accuracy + '%';
-        ui.barManner.style.width = scores.manner + '%';
-        ui.barSoft.style.width = scores.soft + '%';
+        console.log('Eval Version:', scores._version || scores.version || 'v5.0-Legacy');
+
+        if (!response.ok) {
+            throw new Error(scores.error || 'Evaluation Failed');
+        }
+
+        ui.finalScore.textContent = scores.score || 0;
+        ui.barAccuracy.style.width = (scores.accuracy || 0) + '%';
+        ui.barManner.style.width = (scores.objection || 0) + '%'; // objection -> manner bar
+        ui.barSoft.style.width = (scores.softSkills || 0) + '%'; // softSkills -> soft bar
         
         const labels = translations[currentLang]['score-labels'];
-        const labelIndex = Math.min(Math.floor(scores.total / 2), labels.length - 1);
-        ui.scoreText.textContent = labels[labelIndex];
-
-        renderFeedback(scores.feedback);
-        
-        // Log to history
+        const total = scores.score || 0;
+        ui.scoreText.textContent = labels[Math.min(Math.floor(total / 2), labels.length - 1)];
+        renderFeedback(scores.feedback || []);
         logSession(scores);
-        
     } catch (error) {
-        console.error('Evaluation Error:', error);
-        ui.scoreText.textContent = 'Error in analysis';
+        console.error('Eval Error:', error);
+        ui.finalScore.textContent = '!';
     } finally {
         isGrading = false;
     }
@@ -259,23 +337,19 @@ function renderFeedback(feedback) {
 }
 
 function logSession(scores) {
-    try {
-        fetch('/api/log', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                timestamp: new Date().toLocaleString(),
-                persona: activePersona.name[currentLang],
-                score: scores.total,
-                accuracy: scores.accuracy,
-                manner: scores.manner,
-                soft: scores.soft,
-                transcript: chatHistory.map(m => `${m.type.toUpperCase()}: ${m.text}`).join('\n')
-            })
-        });
-    } catch (e) {
-        console.warn('Logging failed:', e);
-    }
+    fetch(`/.netlify/functions/log?t=${Date.now()}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            timestamp: new Date().toLocaleString(),
+            persona: activePersona.name[currentLang],
+            score: scores.score,
+            accuracy: scores.accuracy,
+            manner: scores.objection,
+            soft: scores.softSkills,
+            transcript: chatHistory.map(m => `${m.type.toUpperCase()}: ${m.text}`).join('\n')
+        })
+    }).catch(e => console.warn('Log error'));
 }
 
 function initSpeechRecognition() {
@@ -284,54 +358,28 @@ function initSpeechRecognition() {
         recognition = new SpeechRecognition();
         recognition.interimResults = true;
         recognition.continuous = true;
-
-        recognition.onresult = (event) => {
-            const transcript = Array.from(event.results)
-                .map(result => result[0])
-                .map(result => result.transcript)
-                .join('');
-            ui.chatInput.value = transcript;
-            
-            // Detect fillers
-            const fillers = ["ანუ", "ესე იგი", "um", "ah", "like", "so"];
-            fillers.forEach(f => {
-                if (transcript.toLowerCase().endsWith(f)) {
-                    fillerCount++;
-                }
-            });
+        recognition.onresult = (e) => {
+            ui.chatInput.value = Array.from(e.results).map(r => r[0].transcript).join('');
         };
-
-        recognition.onend = () => {
-            if (isRecording) recognition.start();
-        };
+        recognition.onend = () => { if (isRecording) recognition.start(); };
     } else {
         ui.voiceBtn.style.display = 'none';
-        console.warn('Speech recognition not supported');
     }
 }
 
 function toggleRecording() {
     if (!isRecording) {
-        startRecording();
+        isRecording = true;
+        ui.voiceBtn.classList.add('recording');
+        ui.voiceStatus.classList.remove('hidden');
+        recognition.lang = currentLang === 'ka' ? 'ka-GE' : 'en-US';
+        recognition.start();
     } else {
-        stopRecording();
+        isRecording = false;
+        ui.voiceBtn.classList.remove('recording');
+        ui.voiceStatus.classList.add('hidden');
+        recognition.stop();
     }
-}
-
-function startRecording() {
-    isRecording = true;
-    recordStartTime = Date.now();
-    ui.voiceBtn.classList.add('recording');
-    ui.voiceStatus.classList.remove('hidden');
-    recognition.lang = currentLang === 'ka' ? 'ka-GE' : 'en-US';
-    recognition.start();
-}
-
-function stopRecording() {
-    isRecording = false;
-    ui.voiceBtn.classList.remove('recording');
-    ui.voiceStatus.classList.add('hidden');
-    recognition.stop();
 }
 
 function resetApp() {
@@ -339,7 +387,6 @@ function resetApp() {
     ui.setupScreen.classList.remove('hidden');
     activePersona = null;
     chatHistory = [];
-    fillerCount = 0;
 }
 
 init();
