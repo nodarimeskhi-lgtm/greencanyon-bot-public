@@ -1213,7 +1213,8 @@ async function manualRefresh() {
           const parseNum = (str) => { if(!str)return 0; return parseFloat(String(str).replace(/\\s/g,'').replace(/,/g,'.'))||0; };
           
           // Override financial data directly from Google Sheets
-          if (row['საინვესტიცო ღირებულება']) byId[pid].ah_price = parseNum(row['საინვესტიცო ღირებულება']);
+          const sheetsPrice = row['საინვესტიციო ღირებულება'] || row['საინვესტიცო ღირებულება'];
+          if (sheetsPrice) byId[pid].ah_price = parseNum(sheetsPrice);
           if (row['დღიური ქირის ფასი ($)']) byId[pid].daily_rent = parseNum(row['დღიური ქირის ფასი ($)']);
           if (row['პესიმისტური Rental ROI %']) byId[pid].roi_file = parseNum(row['პესიმისტური Rental ROI %']);
         }
