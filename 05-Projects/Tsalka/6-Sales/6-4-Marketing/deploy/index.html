@@ -10,68 +10,40 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600&display=swap');
 
-/* ── AI INLINE BOT BUTTON (in panel-header) ── */
-.bot-inline-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--primary);
-  color: #fff;
-  border: 1.5px solid var(--accent);
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-family: 'Inter', sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  text-decoration: none;
-  box-shadow: 0 2px 8px rgba(0,0,0,.15);
-  transition: all .25s ease;
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.bot-inline-btn:hover {
-  background: var(--accent);
-  color: var(--primary);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0,0,0,.2);
-}
-/* ── AI FLOATING BOT BUTTON (bottom-left, compact) ── */
+/* ── AI FLOATING BOT BUTTON ── */
 .bot-float-btn {
   position: fixed;
-  bottom: 20px;
-  left: 20px;
+  bottom: 24px;
+  right: 24px;
   z-index: 5000;
   background: var(--primary);
   color: #fff;
   border: 2px solid var(--accent);
-  padding: 9px 15px;
+  padding: 12px 20px;
   border-radius: 30px;
   font-family: 'Inter', sans-serif;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   text-decoration: none;
   display: flex;
   align-items: center;
-  gap: 6px;
-  box-shadow: 0 3px 12px rgba(0,0,0,.2);
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,.2);
   transition: all .3s ease;
   cursor: pointer;
-  opacity: 0.85;
 }
 .bot-float-btn:hover {
   background: var(--accent);
   color: var(--primary);
-  transform: translateY(-2px);
-  box-shadow: 0 5px 16px rgba(0,0,0,.25);
-  opacity: 1;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.3);
 }
 @media (max-width: 600px) {
   .bot-float-btn {
-    bottom: 14px;
-    left: 14px;
-    padding: 8px 13px;
-    font-size: 11px;
+    bottom: 16px;
+    right: 16px;
+    padding: 10px 16px;
+    font-size: 13px;
   }
 }
 :root {
@@ -407,9 +379,6 @@ tbody td{padding:9px 12px;vertical-align:middle;white-space:nowrap}
               <option value="Studio 35m²">Studio 35m²</option>
               <option value="Junior Suite 50m²">Junior Suite 50m²</option>
             </select>
-            <a href="https://t.me/GreenCanyonSalesBot" target="_blank" class="bot-inline-btn">
-              <span>🤖</span><span data-i18n="float_bot">AI ასისტენტი</span>
-            </a>
           </div>
         </div>
         <div class="table-wrap">
@@ -818,7 +787,7 @@ const INVENTORY = [
 // CONFIG
 // ═══════════════════════════════════════
   const CFG = {
-    sheetsUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQf7QPiuQrajThqiHwSQxGSQQ1nb9XEU8YHmK5atshH6VxSTb90QjZIEUGuAlImhQ/pub?output=csv',
+    sheetsUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSxarJedqRj46r3G0SpC2hooZ-Mm5t_VhNzDo451AEXe7W6K2HOJgETUAAJZrlOBw/pub?gid=1814271509&single=true&output=csv',
     pageSize: 20,
     refreshMs: 5 * 60 * 1000
   };
@@ -1471,9 +1440,9 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-<!-- AI Floating Assistant Button (bottom-left, compact) -->
+<!-- AI Floating Assistant Button -->
 <a href="https://t.me/GreenCanyonSalesBot" target="_blank" class="bot-float-btn">
-  <span>💬</span><span data-i18n="float_bot">AI ასისტენტი</span>
+  <span data-i18n="float_bot">AI ასისტენტი 💬</span>
 </a>
 </body>
 </html>

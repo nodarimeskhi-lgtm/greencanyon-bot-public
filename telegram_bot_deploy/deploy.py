@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Google Sheets-ის ბაზის URL (იგივე, რასაც Sales Portal იყენებს)
-CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQf7QPiuQrajThqiHwSQxGSQQ1nb9XEU8YHmK5atshH6VxSTb90QjZIEUGuAlImhQ/pub?output=csv"
+CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSxarJedqRj46r3G0SpC2hooZ-Mm5t_VhNzDo451AEXe7W6K2HOJgETUAAJZrlOBw/pub?gid=1814271509&single=true&output=csv"
 
 # შევქმნათ ფაილი თუ არ არსებობს
 csv_file = "unanswered_questions.csv"
