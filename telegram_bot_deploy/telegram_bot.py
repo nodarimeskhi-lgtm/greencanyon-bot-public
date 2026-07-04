@@ -248,7 +248,7 @@ def handle_message(message):
     
     try:
         completion = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model="llama-3.3-70b-versatile",
             messages=api_messages,
             temperature=0.5,
             max_tokens=600,
