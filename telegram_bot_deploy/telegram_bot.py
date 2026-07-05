@@ -328,5 +328,10 @@ while True:
     try:
         bot.polling(none_stop=True, timeout=60)
     except Exception as e:
+        err_msg = str(e).lower()
+        if "conflict" in err_msg or "409" in err_msg:
+            print("Conflict 409 detected! Exiting to prevent infinite loop...")
+            import sys
+            sys.exit(1)
         print("Error encountered, retrying...", e)
         time.sleep(5)
