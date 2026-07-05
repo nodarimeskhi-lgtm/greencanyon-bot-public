@@ -255,13 +255,57 @@ def handle_message(message):
     if context_msg:
         api_messages.append({"role": "system", "content": f"აქტუალური მონაცემები ბაზიდან კლიენტის კითხვის საპასუხოდ: {context_msg}"})
     
+    # ── API-ს გამოძახება მოდელების კასკადითა და განმეორებით ───────────
+    models = ["llama-3.3-70b-versatile", "gemma2-9b-it", "llama-3.1-8b-instant"]
+    completion = None
+    last_error = None
+    
+    for model_name in models:
+        max_retries = 2
+        retry_delay = 2
+        for attempt in range(max_retries + 1):
+            try:
+                print(f"Calling model {model_name} (attempt {attempt + 1})...")
+                completion = client.chat.completions.create(
+                    model=model_name,
+                    messages=api_messages,
+                    temperature=0.5,
+                    max_tokens=1200,
+                )
+                break
+            except Exception as e:
+                last_error = e
+                err_str = str(e).lower()
+                is_rate_limit = any(w in err_str for w in ["rate_limit", "429", "413", "limit", "overloaded", "busy", "timeout"])
+                if is_rate_limit and attempt < max_retries:
+                    sleep_time = retry_delay * (2 ** attempt)
+                    print(f"Rate limit / overload on {model_name}. Retrying in {sleep_time}s...")
+                    time.sleep(sleep_time)
+                    continue
+                else:
+                    break
+        if completion:
+            break
+
+    # თუ მაინც ვერცერთმა მოდელმა ვერ გასცა პასუხი, შევდივართ უსასრულო ციკლში 8B მოდელზე
+    if not completion:
+        print(f"All models failed. Entering emergency retry loop on llama-3.1-8b-instant. Last error: {last_error}")
+        while True:
+            try:
+                completion = client.chat.completions.create(
+                    model="llama-3.1-8b-instant",
+                    messages=api_messages,
+                    temperature=0.5,
+                    max_tokens=1200,
+                )
+                if completion:
+                    print("Emergency loop recovered successfully!")
+                    break
+            except Exception as e:
+                print(f"Emergency loop failed: {e}. Retrying in 3 seconds...")
+                time.sleep(3)
+
     try:
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=api_messages,
-            temperature=0.5,
-            max_tokens=1200,
-        )
         response_text = completion.choices[0].message.content
         chat_history.append({"role": "assistant", "content": response_text})
         
@@ -275,7 +319,7 @@ def handle_message(message):
 
         bot.reply_to(message, response_text)
     except Exception as e:
-        bot.reply_to(message, f"კავშირის შეცდომა: {str(e)}")
+        print(f"Error handling bot response: {e}")
 
 import time
 time.sleep(1) # მცირე პაუზა

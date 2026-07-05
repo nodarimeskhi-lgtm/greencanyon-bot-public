@@ -51,57 +51,132 @@ exports.handler = async (event, context) => {
         introContext = `\n\nIntro: "${firstMsg.content}"`;
     }
 
-    const postData = JSON.stringify({
-      model: "llama-3.3-70b-versatile",
-      messages: [
-        { role: "system", content: (systemPrompts[persona]?.[lang] || systemPrompts[persona]?.['en'] || "You are a lead.") + "\nInstruction: DO NOT summarize or repeat the agent's points. Remember previous answers and do not ask redundant questions. Be direct and concise." + introContext },
-        ...groqMessages
-      ],
-      temperature: 0.5, 
-      max_tokens: 1024,
-    });
+    const models = ["llama-3.3-70b-versatile", "gemma2-9b-it", "llama-3.1-8b-instant"];
+    let finalCompletion = null;
+    let lastError = null;
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-    const response = await new Promise((resolve, reject) => {
-      const options = {
-        hostname: 'api.groq.com',
-        path: '/openai/v1/chat/completions',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Length': Buffer.byteLength(postData)
+    for (const modelName of models) {
+      let success = false;
+      const maxRetries = 2;
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+          const postData = JSON.stringify({
+            model: modelName,
+            messages: [
+              { role: "system", content: (systemPrompts[persona]?.[lang] || systemPrompts[persona]?.['en'] || "You are a lead.") + "\nInstruction: DO NOT summarize or repeat the agent's points. Remember previous answers and do not ask redundant questions. Be direct and concise." + introContext },
+              ...groqMessages
+            ],
+            temperature: 0.5, 
+            max_tokens: 1024,
+          });
+
+          const response = await new Promise((resolve, reject) => {
+            const options = {
+              hostname: 'api.groq.com',
+              path: '/openai/v1/chat/completions',
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Length': Buffer.byteLength(postData)
+              }
+            };
+
+            const req = https.request(options, (res) => {
+              res.setEncoding('utf8');
+              let body = '';
+              res.on('data', (chunk) => body += chunk);
+              res.on('end', () => resolve({ status: res.statusCode, data: body }));
+            });
+
+            req.on('error', (e) => reject(e));
+            req.write(postData);
+            req.end();
+          });
+
+          const groqData = JSON.parse(response.data);
+
+          if (response.status === 200) {
+            finalCompletion = groqData;
+            success = true;
+            break;
+          } else {
+            const errMsg = groqData.error?.message || "Connection issue.";
+            throw new Error(`HTTP ${response.status}: ${errMsg}`);
+          }
+        } catch (e) {
+          lastError = e;
+          const errStr = e.message.toLowerCase();
+          const isRateLimit = errStr.includes("rate_limit") || errStr.includes("429") || errStr.includes("413") || errStr.includes("limit") || errStr.includes("overloaded") || errStr.includes("busy") || errStr.includes("timeout");
+          if (isRateLimit && attempt < maxRetries) {
+            await delay(2000 * Math.pow(2, attempt));
+          } else {
+            break;
+          }
         }
-      };
+      }
+      if (success) {
+        break;
+      }
+    }
 
-      const req = https.request(options, (res) => {
-        res.setEncoding('utf8');
-        let body = '';
-        res.on('data', (chunk) => body += chunk);
-        res.on('end', () => resolve({ status: res.statusCode, data: body }));
-      });
+    if (!finalCompletion) {
+      // Emergency retry loop on 8B model to guarantee an answer, trying every 3 seconds
+      console.log(`All models failed. Entering emergency retry loop on llama-3.1-8b-instant. Last error: ${lastError ? lastError.message : "unknown"}`);
+      while (true) {
+        try {
+          const postData = JSON.stringify({
+            model: "llama-3.1-8b-instant",
+            messages: [
+              { role: "system", content: (systemPrompts[persona]?.[lang] || systemPrompts[persona]?.['en'] || "You are a lead.") + "\nInstruction: DO NOT summarize or repeat the agent's points. Remember previous answers and do not ask redundant questions. Be direct and concise." + introContext },
+              ...groqMessages
+            ],
+            temperature: 0.5, 
+            max_tokens: 1024,
+          });
 
-      req.on('error', (e) => reject(e));
-      req.write(postData);
-      req.end();
-    });
+          const response = await new Promise((resolve, reject) => {
+            const options = {
+              hostname: 'api.groq.com',
+              path: '/openai/v1/chat/completions',
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Length': Buffer.byteLength(postData)
+              }
+            };
 
-    const groqData = JSON.parse(response.data);
+            const req = https.request(options, (res) => {
+              res.setEncoding('utf8');
+              let body = '';
+              res.on('data', (chunk) => body += chunk);
+              res.on('end', () => resolve({ status: res.statusCode, data: body }));
+            });
 
-    if (response.status !== 200) {
-      const errMsg = groqData.error?.message || "Connection issue.";
-      return { 
-        statusCode: response.status, 
-        body: JSON.stringify({ 
-          error: errMsg, 
-          version: "v5.1-Stable" 
-        }) 
-      };
+            req.on('error', (e) => reject(e));
+            req.write(postData);
+            req.end();
+          });
+
+          const groqData = JSON.parse(response.data);
+          if (response.status === 200) {
+            finalCompletion = groqData;
+            console.log("Emergency loop recovered successfully!");
+            break;
+          }
+        } catch (e) {
+          console.log(`Emergency loop failed: ${e.message}. Retrying in 3 seconds...`);
+          await delay(3000);
+        }
+      }
     }
 
     return {
       statusCode: 200,
       body: JSON.stringify({ 
-        message: groqData.choices[0].message.content,
+        message: finalCompletion.choices[0].message.content,
         version: "v5.1-Stable" 
       })
     };
