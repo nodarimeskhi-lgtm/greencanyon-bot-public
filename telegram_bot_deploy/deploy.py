@@ -322,16 +322,22 @@ def handle_message(message):
         print(f"Error handling bot response: {e}")
 
 import time
+import sys
 time.sleep(1) # მცირე პაუზა
 
+print("Starting custom single-threaded polling loop...")
+offset = None
 while True:
     try:
-        bot.polling(none_stop=True, timeout=60)
+        updates = bot.get_updates(offset=offset, timeout=30)
+        if updates:
+            for update in updates:
+                offset = update.update_id + 1
+            bot.process_new_updates(updates)
     except Exception as e:
         err_msg = str(e).lower()
         if "conflict" in err_msg or "409" in err_msg:
-            print("Conflict 409 detected! Exiting to prevent infinite loop...")
-            import sys
+            print("Conflict 409 detected in custom polling! Exiting immediately...")
             sys.exit(1)
-        print("Error encountered, retrying...", e)
+        print("Error encountered, retrying in 5 seconds:", e)
         time.sleep(5)
