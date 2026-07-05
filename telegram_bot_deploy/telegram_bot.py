@@ -327,9 +327,11 @@ time.sleep(1) # მცირე პაუზა
 
 print("Starting custom single-threaded polling loop...")
 offset = None
+consecutive_conflicts = 0
 while True:
     try:
         updates = bot.get_updates(offset=offset, timeout=30)
+        consecutive_conflicts = 0  # Reset on success
         if updates:
             for update in updates:
                 offset = update.update_id + 1
@@ -337,7 +339,12 @@ while True:
     except Exception as e:
         err_msg = str(e).lower()
         if "conflict" in err_msg or "409" in err_msg:
-            print("Conflict 409 detected in custom polling! Exiting immediately...")
-            sys.exit(1)
+            consecutive_conflicts += 1
+            if consecutive_conflicts >= 3:
+                print("Conflict 409 detected 3 times consecutively! Exiting to prevent loop...")
+                sys.exit(1)
+            print(f"Conflict 409 detected (count {consecutive_conflicts}). Sleeping 15 seconds for connection cleanup...")
+            time.sleep(15)
+            continue
         print("Error encountered, retrying in 5 seconds:", e)
         time.sleep(5)
