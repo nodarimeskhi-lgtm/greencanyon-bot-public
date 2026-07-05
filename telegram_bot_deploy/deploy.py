@@ -260,7 +260,7 @@ def handle_message(message):
             model="llama-3.3-70b-versatile",
             messages=api_messages,
             temperature=0.5,
-            max_tokens=600,
+            max_tokens=1200,
         )
         response_text = completion.choices[0].message.content
         chat_history.append({"role": "assistant", "content": response_text})
