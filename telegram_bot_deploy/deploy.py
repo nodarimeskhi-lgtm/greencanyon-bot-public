@@ -256,6 +256,12 @@ def handle_message(message):
         api_messages.append({"role": "system", "content": f"აქტუალური მონაცემები ბაზიდან კლიენტის კითხვის საპასუხოდ: {context_msg}"})
     
     # ── API-ს გამოძახება მოდელების კასკადითა და განმეორებით ───────────
+    # ქეშის ისტორია შეკვეცილი: მხოლოდ system prompt + ბოლო 2 შეტყობინება
+    def trim_messages(msgs):
+        system = [m for m in msgs if m['role'] == 'system']
+        non_system = [m for m in msgs if m['role'] != 'system']
+        return system + non_system[-4:]
+
     models = ["llama-3.3-70b-versatile", "gemma2-9b-it", "llama-3.1-8b-instant"]
     completion = None
     last_error = None
@@ -263,20 +269,26 @@ def handle_message(message):
     for model_name in models:
         max_retries = 2
         retry_delay = 2
+        # llama-3.1-8b-instant-ისთვის შეკვეცილ კონტექსტს ვიყენებთ
+        msgs_to_send = trim_messages(api_messages) if model_name == "llama-3.1-8b-instant" else api_messages
         for attempt in range(max_retries + 1):
             try:
                 print(f"Calling model {model_name} (attempt {attempt + 1})...")
                 completion = client.chat.completions.create(
                     model=model_name,
-                    messages=api_messages,
+                    messages=msgs_to_send,
                     temperature=0.5,
-                    max_tokens=1200,
+                    max_tokens=800,
                 )
                 break
             except Exception as e:
                 last_error = e
                 err_str = str(e).lower()
-                is_rate_limit = any(w in err_str for w in ["rate_limit", "429", "413", "limit", "overloaded", "busy", "timeout"])
+                # 413 შეცდომა = შეტყობინება ძალიან დიდია — ამ მოდელს ვტოვებთ
+                if "413" in err_str:
+                    print(f"413 - message too large for {model_name}. Skipping model.")
+                    break
+                is_rate_limit = any(w in err_str for w in ["rate_limit", "429", "limit", "overloaded", "busy", "timeout"])
                 if is_rate_limit and attempt < max_retries:
                     sleep_time = retry_delay * (2 ** attempt)
                     print(f"Rate limit / overload on {model_name}. Retrying in {sleep_time}s...")
@@ -287,23 +299,14 @@ def handle_message(message):
         if completion:
             break
 
-    # თუ მაინც ვერცერთმა მოდელმა ვერ გასცა პასუხი, შევდივართ უსასრულო ციკლში 8B მოდელზე
+    # თუ ვერცერთმა მოდელმა ვერ გასცა პასუხი — ვატყობინებთ მომხმარებელს
     if not completion:
-        print(f"All models failed. Entering emergency retry loop on llama-3.1-8b-instant. Last error: {last_error}")
-        while True:
-            try:
-                completion = client.chat.completions.create(
-                    model="llama-3.1-8b-instant",
-                    messages=api_messages,
-                    temperature=0.5,
-                    max_tokens=1200,
-                )
-                if completion:
-                    print("Emergency loop recovered successfully!")
-                    break
-            except Exception as e:
-                print(f"Emergency loop failed: {e}. Retrying in 3 seconds...")
-                time.sleep(3)
+        print(f"All models failed. Last error: {last_error}")
+        try:
+            bot.reply_to(message, "⚠️ სამწუხაროდ, ამ მომენტში AI სერვისი გადატვირთულია. გთხოვთ, 1-2 წუთში სცადოთ ხელახლა.")
+        except Exception as send_err:
+            print(f"Failed to send error message: {send_err}")
+        return
 
     try:
         response_text = completion.choices[0].message.content
