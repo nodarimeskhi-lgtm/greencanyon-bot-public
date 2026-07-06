@@ -44,7 +44,16 @@ gemini_model = None
 if GEMINI_API_KEY:
     try:
         genai.configure(api_key=GEMINI_API_KEY)
-        gemini_model = genai.GenerativeModel("gemini-2.0-flash")
+        generation_config = genai.GenerationConfig(
+            max_output_tokens=700,
+            temperature=0.4,
+        )
+        # system_instruction პარამეტრი — ეს სწორი გზაა Gemini-სთვის
+        gemini_model = genai.GenerativeModel(
+            model_name="gemini-2.0-flash",
+            system_instruction=SYSTEM_PROMPT,
+            generation_config=generation_config,
+        )
         print("Gemini 2.0 Flash initialized successfully.")
     except Exception as e:
         print(f"Gemini init error: {e}")
@@ -152,10 +161,11 @@ SYSTEM_PROMPT = """შენ ხარ Green Canyon Eco Village-ის გამ
 მაქსიმუმ 4 წინადადება. გრძელი სიებიდან მხოლოდ 2-3 ვარიანტი.
 
 === პირველი კონტაქტი ===
-თბილად მიესალმე და ჰკითხე:
+თბილად მიესალმე და დაუსვი 2 კითხვა:
 1. მიზანი: ინვესტიცია და ქირა, თუ პირადი დასასვენებელი?
 2. სავარაუდო ბიუჯეტი?
-შემდეგ შეუთავაზე 2-3 კონკრეტული ვარიანტი ქვემოთ მოცემული მონაცემებიდან.
+მიაყო კლიენტი გაგიზიარებს — შეუთავაზე 2-3 კონკრეტული ვარიანტი ბაზიდან.
+თუ კლიენტი თავადვე იწყებს კონკრეტულ კითხვაზე (ვარიანტი, ფასი, ზონა) — ასუხენ ჩკითხვების გარეშე ღირებულად უპასუხო.
 
 === GREEN CANYON — ფაქტები ===
 წალკა, 1500მ ზ.დ. | თბილისიდან 90 წუთი | ზამთარში გზა გაწმენდილია
@@ -180,9 +190,10 @@ Apart Hotel (ნომრები): $60,000-დან
 იურიდიული: საჯარო რეესტრი. უცხოელებს შეუძლიათ შეძენა (არასასოფლო-სამეურნეო სტატუსი). 10-წლიანი გაქირავების ხელშეკრულება.
 
 === წესები ===
-არ გამოთვალო კვ.მ ფასი ან კონკრეტული მოგება ჩატში.
-არ გამოიგონო სახელები, გადახდის გრაფიკი ან განვადების ზუსტი პირობები.
-უცნობ კითხვაზე: "ამ დეტალებზე ჩვენი სპეციალისტი პირადად გაგესაუბრებათ — გთხოვთ, დაგვიტოვოთ ნომერი."
+❗ კვ.მ ფასი (ლ/მ² ან ფასი/მ²) არასოდეს გამოიანგარიშო, გამოაყვანო ან გამოახსენო არასოდეს პირველ ქართულ რიცხვით. ფასები მითითებულია მთლიანი კოტეჯისთვის (ნაკვეთი+მშენებლობა).
+❗ კონკრეტული მოგება/ROI ჩატში არ გამოთვალო — მითითე ღერებულად PDF/Excel.
+❗ სახელები, გადახდის გრაფიკი, განვადების ზუსტი პირობები — არ გამოიგონო.
+✅ უცნობ კითხვაზე: "ამ დეტალებზე ჩვენი სპეციალისტი პირადად გაგესაუბრებათ — გთხოვთ, დაგვიტოვოთ ნომერი."
 """
 
 # user_id -> Gemini ChatSession  (Groq fallback: list of messages)
@@ -195,15 +206,14 @@ def call_gemini(user_id, user_message, context_msg=""):
     global user_gemini_sessions
     with sessions_lock:
         if user_id not in user_gemini_sessions:
+            # system_instruction უკვე მოდელშია — სესია სუფთად იწყება
             session = gemini_model.start_chat(history=[])
-            # სისტემის პრომპტს ვუგზავნით პირველ შეტყობინებად
-            session.send_message(f"[სისტემის ინსტრუქცია]\n{SYSTEM_PROMPT}\n[ინსტრუქცია დასრულდა]")
             user_gemini_sessions[user_id] = session
         session = user_gemini_sessions[user_id]
 
     full_message = user_message
     if context_msg:
-        full_message = f"{user_message}\n\n[ინვენტარიდან]:\n{context_msg}"
+        full_message = f"{user_message}\n\n[ხელმისაწვდომი ვარიანტები ბაზიდან]:\n{context_msg}"
 
     response = session.send_message(full_message)
     return response.text
