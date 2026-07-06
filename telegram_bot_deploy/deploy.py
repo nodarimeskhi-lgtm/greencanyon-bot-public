@@ -1,20 +1,19 @@
 import telebot
+import google.generativeai as genai
 from groq import Groq
 import datetime
 import csv
 import os
 import re
 import time
+import threading
 import urllib.request
 from dotenv import load_dotenv
 
-# ჩავტვირთოთ გარემოს ცვლადები .env ფაილიდან
 load_dotenv()
 
-# Google Sheets-ის ბაზის URL (იგივე, რასაც Sales Portal იყენებს)
 CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSxarJedqRj46r3G0SpC2hooZ-Mm5t_VhNzDo451AEXe7W6K2HOJgETUAAJZrlOBw/pub?gid=1814271509&single=true&output=csv"
 
-# შევქმნათ ფაილი თუ არ არსებობს
 csv_file = "unanswered_questions.csv"
 if not os.path.exists(csv_file):
     with open(csv_file, "w", encoding="utf-8", newline="") as f:
@@ -26,139 +25,122 @@ def log_unanswered_question(user_id, question, response):
         writer = csv.writer(f)
         writer.writerow([datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), user_id, question, response])
 
-print("Starting Green Canyon Telegram Bot (Groq Engine)...")
+print("Starting Green Canyon Telegram Bot (Gemini Engine)...")
 
-# წავიკითხოთ გასაღებები
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
-GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+GROQ_API_KEY   = os.getenv('GROQ_API_KEY')
 
-if not TELEGRAM_TOKEN or not GROQ_API_KEY:
-    print("ERROR: TELEGRAM_TOKEN or GROQ_API_KEY not found in environment!")
+if not TELEGRAM_TOKEN:
+    print("ERROR: TELEGRAM_TOKEN not found!")
     exit(1)
+if not GEMINI_API_KEY:
+    print("WARNING: GEMINI_API_KEY not found — will use Groq only!")
 
-bot = telebot.TeleBot(TELEGRAM_TOKEN)
-try:
-    client = Groq(api_key=GROQ_API_KEY)
-except Exception as e:
-    print("Groq Init Error:", e)
+bot = telebot.TeleBot(TELEGRAM_TOKEN, threaded=True, num_threads=8)
 
-# ── live მონაცემების ჩამოტვირთვა და ქეშირება ───────────────────────────
+# Gemini კლიენტი
+gemini_model = None
+if GEMINI_API_KEY:
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
+        gemini_model = genai.GenerativeModel("gemini-2.0-flash")
+        print("Gemini 2.0 Flash initialized successfully.")
+    except Exception as e:
+        print(f"Gemini init error: {e}")
+
+# Groq fallback
+groq_client = None
+if GROQ_API_KEY:
+    try:
+        groq_client = Groq(api_key=GROQ_API_KEY)
+        print("Groq fallback initialized.")
+    except Exception as e:
+        print(f"Groq init error: {e}")
+
+# ── ინვენტარის ქეში ───────────────────────────────────────────────────────
 cached_plots = []
 last_fetch_time = 0
-FETCH_INTERVAL = 300 # 5 წუთი
+FETCH_INTERVAL = 300
+cache_lock = threading.Lock()
 
 def fetch_and_parse_inventory():
     try:
         req = urllib.request.Request(CSV_URL, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req, timeout=10) as response:
             content = response.read().decode('utf-8')
-        
-        reader = csv.reader(content.splitlines())
-        rows = list(reader)
-        if not rows:
-            return []
-            
-        header = rows[0]
+
+        lines = content.strip().split('\n')
+        reader = csv.DictReader(lines)
         plots = []
-        for r in rows[1:]:
-            if len(r) < 17 or not r[0].strip():
+        for row in reader:
+            try:
+                price_str = row.get('Price', '0').replace('$', '').replace(',', '').strip()
+                area_str  = row.get('Area', '0').replace('m²', '').replace(',', '').strip()
+                roi_str   = row.get('ROI', '0').replace('%', '').strip()
+                payback_str = row.get('Payback', '0').strip()
+                status    = row.get('Status', '').strip().lower()
+
+                if status not in ['available', 'free', 'ხელმისაწვდომი', '']:
+                    continue
+
+                price = float(price_str) if price_str else 0
+                area  = float(area_str)  if area_str  else 0
+                roi   = float(roi_str)   if roi_str   else 0
+                payback = float(payback_str) if payback_str else 0
+
+                if price > 0:
+                    plots.append({
+                        'id':      row.get('ID', '').strip(),
+                        'zone':    row.get('Zone', '').strip(),
+                        'style':   row.get('Style', '').strip(),
+                        'price':   price,
+                        'area':    area,
+                        'roi':     roi,
+                        'payback': payback,
+                    })
+            except (ValueError, KeyError):
                 continue
-                
-            pid = r[0].strip()
-            zone = 'AH' if pid.startswith('AH') else pid.split('-')[0] if '-' in pid else ''
-            
-            def clean_num(val):
-                if not val: return 0.0
-                val = val.replace('\xa0', '').replace(' ', '').replace(',', '.')
-                try:
-                    return float(val)
-                except ValueError:
-                    return 0.0
-            
-            plots.append({
-                'id': pid,
-                'zone': zone,
-                'area': clean_num(r[1]),
-                'style': r[4].strip(),
-                'house_area': clean_num(r[5]),
-                'price': clean_num(r[7]),
-                'rent': clean_num(r[13]),
-                'roi': clean_num(r[15]),
-                'payback': clean_num(r[16]),
-                'status': 'free' # default status
-            })
         return plots
     except Exception as e:
-        print("Error fetching live inventory:", e)
+        print(f"Inventory fetch error: {e}")
         return []
 
 def get_plots():
     global cached_plots, last_fetch_time
     now = time.time()
-    if not cached_plots or (now - last_fetch_time) > FETCH_INTERVAL:
-        plots = fetch_and_parse_inventory()
-        if plots:
-            cached_plots = plots
-            last_fetch_time = now
-            print(f"Successfully cached {len(plots)} plots from Google Sheets.")
-    return cached_plots
+    with cache_lock:
+        if now - last_fetch_time > FETCH_INTERVAL or not cached_plots:
+            plots = fetch_and_parse_inventory()
+            if plots:
+                cached_plots = plots
+                last_fetch_time = now
+                print(f"Successfully cached {len(cached_plots)} plots from Google Sheets.")
+        return cached_plots
 
-# ── ძებნისა და ფილტრაციის ლოგიკა ──────────────────────────────────────
-def search_inventory(plots, query_text):
-    q_lower = query_text.lower()
-    
-    # 1. ზონების ამოცნობა სინონიმებით
-    zones = []
-    zone_synonyms = {
-        'LA': ['la', 'კანიონი', 'კანიონის', 'კლდის პირი'],
-        'LB': ['lb', 'პირველი ზოლი', 'პირველ ზოლში', 'პირველ'],
-        'LC': ['lc', 'მეორე ზოლი', 'მეორე ზოლში', 'მეორედ'],
-        'LD': ['ld', 'მესამე ზოლი', 'მესამე ზოლში'],
-        'AH': ['ah', 'apart', 'hotel', 'აპარტ', 'სასტუმრო', 'ნომერი', 'ნომრები']
-    }
-    for z, syns in zone_synonyms.items():
-        if any(s in q_lower for s in syns):
-            zones.append(z)
-            
-    # 2. რიცხვების და ფასების ამოღება
-    # ვასუფთავებთ სფეისებს რიცხვებში (მაგ: "300 000" -> "300000")
-    cleaned_q = re.sub(r'(\d+)\s+(\d{3})\b', r'\1\2', q_lower)
-    
-    numbers = []
-    # ვეძებთ 5 და 6 ნიშნა ციფრებს (ფასები)
-    for n in re.findall(r'\b\d{5,6}\b', cleaned_q):
-        numbers.append(int(n))
-        
-    # ვეძებთ "კ" ფორმატს (მაგ: "250კ", "70k")
-    for k_match in re.findall(r'\b(\d{2,3})\s*[kკ]\b', cleaned_q):
-        numbers.append(int(k_match) * 1000)
-        
-    max_price = None
-    min_price = None
-    
-    for num in numbers:
-        if num >= 40000:
-            idx = cleaned_q.find(str(num))
-            context = cleaned_q[max(0, idx-15):idx+len(str(num))+15]
-            if any(w in context for w in ['მდე', 'მაქს', 'max', 'under', 'less', 'below', 'იაფი', 'იაფად', 'ფარგლებში']):
-                max_price = num
-            elif any(w in context for w in ['დან', 'მინ', 'min', 'above', 'more', 'over']):
-                min_price = num
-            else:
-                max_price = num
+def search_inventory(plots, query):
+    q = query.lower()
+    zone_map = {'la': 'LA', 'lb': 'LB', 'lc': 'LC', 'ld': 'LD',
+                'კანიონ': 'LA', 'პირველ': 'LB', 'მეორ': 'LC', 'მესამ': 'LD', 'apart': 'APART'}
+    zones = [v for k, v in zone_map.items() if k in q]
 
-    results = plots
-    if zones:
-        results = [p for p in results if p['zone'] in zones]
-    if max_price:
-        results = [p for p in results if p['price'] <= max_price]
-    if min_price:
-        results = [p for p in results if p['price'] >= min_price]
-        
-    # ROI-ს მიხედვით კლებადობით სორტირება
-    results = sorted(results, key=lambda x: x['roi'], reverse=True)
-    return results, zones, max_price, min_price
+    max_p, min_p = None, None
+    prices = re.findall(r'\$?([\d,]+)', query)
+    if prices:
+        nums = [float(p.replace(',', '')) for p in prices]
+        if len(nums) >= 2:
+            min_p, max_p = min(nums), max(nums)
+        elif nums[0] < 5000:
+            max_p = nums[0] * 1000
+        else:
+            max_p = nums[0]
 
+    results = [p for p in plots if
+               (not zones or p['zone'] in zones) and
+               (not max_p or p['price'] <= max_p) and
+               (not min_p or p['price'] >= min_p)]
+    results.sort(key=lambda x: x['price'])
+    return results[:5], zones, max_p, min_p
 
 SYSTEM_PROMPT = """შენ ხარ Green Canyon Eco Village-ის გამყიდველი კონსულტანტი. გამოცდილი, მეგობრული, დამაჯერებელი. ლაპარაკობ ისე, როგორც ნამდვილი ქართველი პროფესიონალი — ბუნებრივად, ლამაზად, გამართულად.
 
@@ -189,7 +171,7 @@ Apart Hotel (ნომრები): $60,000-დან
 
 გადახდა: 10-30% შენატანი, 0%-იანი განვადება 3 წლამდე, ყველა გადასახადი ფასშია.
 
-ინვესტიცია (Turnkey): ROI 9-12%/წ | 60% შემოსავალი მფლობელს, 40% კომპანიას (40%-ით კომპანია ფარავს ყველა ხარჯს) | 14 დღე/წ უფასო სარგებლობა | ზუსტი გათვლები — PDF/Excel-ით.
+ინვესტიცია (Turnkey): ROI 9-12%/წ | 60% შემოსავალი მფლობელს, 40% კომპანიას (კომპანია ფარავს ყველა ხარჯს) | 14 დღე/წ უფასო სარგებლობა | ზუსტი გათვლები — PDF/Excel-ით.
 
 მშენებლობა: სკანდინავიური სენდვიჩ-პანელი | Turnkey (ავეჯი+ტექნიკა) ან შავი/თეთრი კარკასი | მზის პანელები ფასშია.
 
@@ -203,130 +185,131 @@ Apart Hotel (ნომრები): $60,000-დან
 უცნობ კითხვაზე: "ამ დეტალებზე ჩვენი სპეციალისტი პირადად გაგესაუბრებათ — გთხოვთ, დაგვიტოვოთ ნომერი."
 """
 
-user_chats = {}
+# user_id -> Gemini ChatSession  (Groq fallback: list of messages)
+user_gemini_sessions = {}
+user_groq_history    = {}
+sessions_lock        = threading.Lock()
+
+def call_gemini(user_id, user_message, context_msg=""):
+    """Gemini-ზე გამოძახება — სესია შენახულია მომხმარებლის მიხედვით."""
+    global user_gemini_sessions
+    with sessions_lock:
+        if user_id not in user_gemini_sessions:
+            session = gemini_model.start_chat(history=[])
+            # სისტემის პრომპტს ვუგზავნით პირველ შეტყობინებად
+            session.send_message(f"[სისტემის ინსტრუქცია]\n{SYSTEM_PROMPT}\n[ინსტრუქცია დასრულდა]")
+            user_gemini_sessions[user_id] = session
+        session = user_gemini_sessions[user_id]
+
+    full_message = user_message
+    if context_msg:
+        full_message = f"{user_message}\n\n[ინვენტარიდან]:\n{context_msg}"
+
+    response = session.send_message(full_message)
+    return response.text
+
+def call_groq_fallback(user_id, user_message, context_msg=""):
+    """Groq fallback — Gemini ვერ მუშაობს ან rate-limit-ზეა."""
+    if not groq_client:
+        return None
+    with sessions_lock:
+        if user_id not in user_groq_history:
+            user_groq_history[user_id] = [{"role": "system", "content": SYSTEM_PROMPT}]
+        history = user_groq_history[user_id]
+
+    history.append({"role": "user", "content": user_message})
+    if context_msg:
+        history.append({"role": "system", "content": f"ინვენტარი: {context_msg}"})
+
+    # ისტორია შეკვეცილი
+    sys_msgs    = [m for m in history if m['role'] == 'system']
+    other_msgs  = [m for m in history if m['role'] != 'system']
+    trimmed     = sys_msgs[:1] + other_msgs[-6:]
+
+    for model_name in ["llama-3.3-70b-versatile", "gemma2-9b-it"]:
+        try:
+            comp = groq_client.chat.completions.create(
+                model=model_name, messages=trimmed,
+                temperature=0.5, max_tokens=900)
+            text = comp.choices[0].message.content
+            history.append({"role": "assistant", "content": text})
+            if len(history) > 10:
+                user_groq_history[user_id] = history[:1] + history[-6:]
+            return text
+        except Exception as e:
+            print(f"Groq {model_name} error: {e}")
+    return None
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-    bot.reply_to(message, "გამარჯობა! მე ვარ Green Canyon-ის AI გაყიდვების ასისტენტი 🏔️\n\nმომწერეთ ნებისმიერი კითხვა პროექტის შესახებ — ფასები, პირობები, ROI და სხვა!")
-    user_chats[message.chat.id] = [{"role": "system", "content": SYSTEM_PROMPT}]
+    uid = message.chat.id
+    with sessions_lock:
+        user_gemini_sessions.pop(uid, None)
+        user_groq_history.pop(uid, None)
+    bot.reply_to(message,
+        "გამარჯობა! მე ვარ Green Canyon Eco Village-ის AI კონსულტანტი 🏔️\n\n"
+        "სიამოვნებით გიპასუხებთ პროექტის შესახებ — ფასები, ზონები, ROI, გადახდის პირობები და სხვა.\n\n"
+        "რით შეიძლება დაგეხმაროთ?")
 
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
     bot.send_chat_action(message.chat.id, 'typing')
-    
-    chat_history = user_chats.get(message.chat.id)
-    if not chat_history:
-        chat_history = [{"role": "system", "content": SYSTEM_PROMPT}]
-        user_chats[message.chat.id] = chat_history
-    
+    uid        = message.chat.id
     query_text = message.text
-    chat_history.append({"role": "user", "content": query_text})
-    
-    # ── live ძებნა და RAG კონტექსტის მომზადება ──────────────────────────
-    plots = get_plots()
+
+    # ── ინვენტარის კონტექსტი ──────────────────────────────────────────────
     context_msg = ""
+    plots = get_plots()
     if plots:
+        keywords = ['ვარიანტ','ნაკვეთ','კოტეჯ','თავისუფალ','ყველაზე','რომელი',
+                    'საუკეთეს','ფასი','ღირს','რა გაქვთ','roi','უკუგება','ზონა','la','lb','lc','ld']
         matching_plots, zones, max_p, min_p = search_inventory(plots, query_text)
-        
-        # თუ კითხვა ეხება ფასს, ზონას, ან საუკეთესო ვარიანტის ძიებას
-        keywords = ['ვარიანტ', 'ნაკვეთ', 'კოტეჯ', 'თავისუფალი', 'ყველაზე', 'რომელი', 'საუკეთესო', 'ფასი', 'ღირს', 'რა გაქვთ', 'roi', 'უკუგება']
-        is_searching = zones or max_p or min_p or any(w in query_text.lower() for w in keywords)
-        
-        if is_searching:
-            context_msg = "\n\n[ინფორმაცია ინვენტარიდან (Google Sheets-დან):"
+        if zones or max_p or min_p or any(w in query_text.lower() for w in keywords):
             if matching_plots:
-                context_msg += f"\nნაპოვნია შესაბამისი {len(matching_plots)} ობიექტი. საუკეთესო ვარიანტები:\n"
+                context_msg = f"ხელმისაწვდომი {len(matching_plots)} ვარიანტი:\n"
                 for r in matching_plots[:4]:
-                    context_msg += f"- კოდი: {r['id']}, ზონა: {r['zone']}, სტილი: {r['style']}, ფასი: ${r['price']:.0f}, ფართი: {r['area']} მ², ROI: {r['roi']}%, უკუგება: {r['payback']} წელი, სტატუსი: 🟢 ხელმისაწვდომი\n"
+                    context_msg += (f"• კოდი {r['id']} | {r['zone']} ზონა | {r['style']} | "
+                                    f"${r['price']:.0f} | {r['area']:.0f}მ² | ROI {r['roi']}%\n")
             else:
-                context_msg += "\nმითითებული ფილტრებით თავისუფალი ობიექტი ვერ მოიძებნა."
-            context_msg += "]\n"
+                context_msg = "მითითებული ფილტრებით ხელმისაწვდომი ვარიანტი ვერ მოიძებნა."
 
-    # ვამზადებთ მესიჯებს API-სთვის (კონტექსტს ვამატებთ როგორც დროებით system მესიჯს ბოლოში)
-    api_messages = chat_history.copy()
-    if context_msg:
-        api_messages.append({"role": "system", "content": f"აქტუალური მონაცემები ბაზიდან კლიენტის კითხვის საპასუხოდ: {context_msg}"})
-    
-    # ── API-ს გამოძახება მოდელების კასკადითა და განმეორებით ───────────
-    # ქეშის ისტორია შეკვეცილი: მხოლოდ system prompt + ბოლო 2 შეტყობინება
-    def trim_messages(msgs):
-        system = [m for m in msgs if m['role'] == 'system']
-        non_system = [m for m in msgs if m['role'] != 'system']
-        return system + non_system[-4:]
+    # ── AI გამოძახება: Gemini → Groq fallback ─────────────────────────────
+    response_text = None
 
-    models = ["llama-3.3-70b-versatile", "gemma2-9b-it", "llama-3.1-8b-instant"]
-    completion = None
-    last_error = None
-    
-    for model_name in models:
-        max_retries = 2
-        retry_delay = 2
-        # llama-3.1-8b-instant-ისთვის შეკვეცილ კონტექსტს ვიყენებთ
-        msgs_to_send = trim_messages(api_messages) if model_name == "llama-3.1-8b-instant" else api_messages
-        for attempt in range(max_retries + 1):
-            try:
-                print(f"Calling model {model_name} (attempt {attempt + 1})...")
-                completion = client.chat.completions.create(
-                    model=model_name,
-                    messages=msgs_to_send,
-                    temperature=0.5,
-                    max_tokens=1000,
-                )
-                break
-            except Exception as e:
-                last_error = e
-                err_str = str(e).lower()
-                # 413 შეცდომა = შეტყობინება ძალიან დიდია — ამ მოდელს ვტოვებთ
-                if "413" in err_str:
-                    print(f"413 - message too large for {model_name}. Skipping model.")
-                    break
-                is_rate_limit = any(w in err_str for w in ["rate_limit", "429", "limit", "overloaded", "busy", "timeout"])
-                if is_rate_limit and attempt < max_retries:
-                    sleep_time = retry_delay * (2 ** attempt)
-                    print(f"Rate limit / overload on {model_name}. Retrying in {sleep_time}s...")
-                    time.sleep(sleep_time)
-                    continue
-                else:
-                    break
-        if completion:
-            break
-
-    # თუ ვერცერთმა მოდელმა ვერ გასცა პასუხი — ვატყობინებთ მომხმარებელს
-    if not completion:
-        print(f"All models failed. Last error: {last_error}")
+    if gemini_model:
         try:
-            bot.reply_to(message, "⚠️ სამწუხაროდ, ამ მომენტში AI სერვისი გადატვირთულია. გთხოვთ, 1-2 წუთში სცადოთ ხელახლა.")
-        except Exception as send_err:
-            print(f"Failed to send error message: {send_err}")
+            print(f"[Gemini] user={uid} query='{query_text[:50]}'")
+            response_text = call_gemini(uid, query_text, context_msg)
+            print(f"[Gemini] OK, {len(response_text)} chars")
+        except Exception as e:
+            print(f"[Gemini] FAILED: {e} — switching to Groq fallback")
+            response_text = None
+
+    if response_text is None:
+        print(f"[Groq fallback] user={uid}")
+        response_text = call_groq_fallback(uid, query_text, context_msg)
+
+    if response_text is None:
+        bot.reply_to(message, "⚠️ სამწუხაროდ, ამ მომენტში სერვისი გადატვირთულია. გთხოვთ, 1-2 წუთში სცადოთ ხელახლა.")
         return
 
-    try:
-        response_text = completion.choices[0].message.content
-        chat_history.append({"role": "assistant", "content": response_text})
-        
-        fallback_phrases = ["პერსონალურად", "სპეციალისტი გაგესაუბრებათ", "ჩვენი სპეციალისტი"]
-        if any(phrase in response_text for phrase in fallback_phrases):
-            log_unanswered_question(message.chat.id, query_text, response_text)
-            
-        if len(chat_history) > 7:
-            chat_history = [chat_history[0]] + chat_history[-4:]
-            user_chats[message.chat.id] = chat_history
+    # ── ლოგირება + პასუხი ─────────────────────────────────────────────────
+    fallback_phrases = ["სპეციალისტი გაგესაუბრებათ", "ჩვენი სპეციალისტი", "დაგვიტოვოთ ნომერი"]
+    if any(phrase in response_text for phrase in fallback_phrases):
+        log_unanswered_question(uid, query_text, response_text)
 
-        bot.reply_to(message, response_text)
-    except Exception as e:
-        print(f"Error handling bot response: {e}")
+    bot.reply_to(message, response_text)
 
-import time
+# ── Polling Loop ──────────────────────────────────────────────────────────
 import sys
-time.sleep(1) # მცირე პაუზა
-
-print("Starting custom single-threaded polling loop...")
+time.sleep(1)
+print("Starting polling loop (threaded)...")
 offset = None
 consecutive_conflicts = 0
 while True:
     try:
         updates = bot.get_updates(offset=offset, timeout=30)
-        consecutive_conflicts = 0  # Reset on success
+        consecutive_conflicts = 0
         if updates:
             for update in updates:
                 offset = update.update_id + 1
@@ -336,10 +319,10 @@ while True:
         if "conflict" in err_msg or "409" in err_msg:
             consecutive_conflicts += 1
             if consecutive_conflicts >= 3:
-                print("Conflict 409 detected 3 times consecutively! Exiting to prevent loop...")
+                print("Conflict 409 x3 — exiting.")
                 sys.exit(1)
-            print(f"Conflict 409 detected (count {consecutive_conflicts}). Sleeping 15 seconds for connection cleanup...")
+            print(f"Conflict 409 ({consecutive_conflicts}/3). Sleeping 15s...")
             time.sleep(15)
-            continue
-        print("Error encountered, retrying in 5 seconds:", e)
-        time.sleep(5)
+        else:
+            print(f"Polling error: {e}. Retry in 5s...")
+            time.sleep(5)
